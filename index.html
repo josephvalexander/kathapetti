@@ -203,22 +203,20 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
 <!-- ADMIN OVERLAY -->
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-box">
-    <h3>⚙️ Admin</h3>
-    <label>Admin Password</label>
-    <input type="password" id="admPass" placeholder="Password"/>
-    <label>Shared Groq API Key</label>
+    <h3>⚙️ Groq API Key</h3>
+    <label>Groq API Key</label>
     <input type="password" id="admKey" placeholder="gsk_..."/>
     <div class="adm-btns">
       <button class="adm-cancel" id="admCancel">Cancel</button>
       <button class="adm-save" id="admSave">Save</button>
     </div>
-    <p id="admMsg" style="font-size:.8rem;margin-top:10px;color:var(--gold)"></p>
+
   </div>
 </div>
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
-const ADMIN_PASS = 'nila2025';
+
 let stories = JSON.parse(localStorage.getItem('nk_stories') || '[]');
 let favs    = JSON.parse(localStorage.getItem('nk_favs')    || '[]');
 let hist    = JSON.parse(localStorage.getItem('nk_hist')    || '[]');
@@ -553,14 +551,14 @@ document.getElementById('admCancel').addEventListener('click',()=>{
   document.getElementById('adminOverlay').classList.remove('open');
 });
 document.getElementById('admSave').addEventListener('click',()=>{
-  const pass=document.getElementById('admPass').value;
-  if(pass!==ADMIN_PASS){document.getElementById('admMsg').textContent='❌ Incorrect password';return;}
   const key=document.getElementById('admKey').value.trim();
   if(key) localStorage.setItem('nk_shared_key',key);
   else localStorage.removeItem('nk_shared_key');
+  apiKey=key;
+  if(key) localStorage.setItem('nk_key',key);
   document.getElementById('adminOverlay').classList.remove('open');
   updateApiWrap();
-  toast('✅ Settings saved');
+  toast('✅ Key saved');
 });
 
 // ── SW ─────────────────────────────────────────────────────────────────────
