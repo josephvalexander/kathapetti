@@ -154,7 +154,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
       </div>
       <button class="btn-gen" id="genBtn">🌟 കഥ ഉണ്ടാക്കൂ</button>
       <div class="api-wrap" id="apiWrap">
-        <label>Groq API Key (groq.com → free)</label>
+        <label>Groq API Key — for story generation (<a href="https://console.groq.com" target="_blank" style="color:var(--gold)">groq.com</a>, free)</label>
         <input type="password" id="apiKeyInput" placeholder="gsk_..."/>
       </div>
     </div>
@@ -193,8 +193,11 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
   <div class="reader-foot">
     <button class="rf-btn" id="playBtn">▶️ <span>കേൾക്കൂ</span></button>
     <select class="voice-sel" id="voiceSel">
-      <option value="female">👩 Female</option>
-      <option value="male">👨 Male</option>
+      <option value="anand">👨 Anand</option>
+      <option value="kavitha">👩 Kavitha</option>
+      <option value="maya">👩 Maya</option>
+      <option value="roopa">👩 Roopa</option>
+      <option value="mani">👨 Mani</option>
     </select>
     <button class="rf-btn" id="readerFavBtn">🤍 Save</button>
   </div>
@@ -203,14 +206,15 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
 <!-- ADMIN OVERLAY -->
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-box">
-    <h3>⚙️ Groq API Key</h3>
-    <label>Groq API Key</label>
+    <h3>⚙️ API Keys</h3>
+    <label>Groq API Key (for story generation)</label>
     <input type="password" id="admKey" placeholder="gsk_..."/>
+    <label style="margin-top:14px">Sarvam API Key (for voice — sarvam.ai)</label>
+    <input type="password" id="admSarvamKey" placeholder="sarvam_..."/>
     <div class="adm-btns">
       <button class="adm-cancel" id="admCancel">Cancel</button>
       <button class="adm-save" id="admSave">Save</button>
     </div>
-
   </div>
 </div>
 
@@ -221,6 +225,7 @@ let stories = JSON.parse(localStorage.getItem('nk_stories') || '[]');
 let favs    = JSON.parse(localStorage.getItem('nk_favs')    || '[]');
 let hist    = JSON.parse(localStorage.getItem('nk_hist')    || '[]');
 let apiKey  = localStorage.getItem('nk_key') || '';
+let sarvamKey = localStorage.getItem('nk_sarvam_key') || '';
 let activeCat = 'all';
 let activeTab = 'home';
 let currentStory = null;
@@ -404,56 +409,142 @@ document.getElementById('readerFav').addEventListener('click',toggleFavCurrent);
 document.getElementById('readerFavBtn').addEventListener('click',toggleFavCurrent);
 
 // ── Speech ─────────────────────────────────────────────────────────────────
+let audioQueue = [];
+let audioPlaying = false;
+
 function stopSpeech(){
-  synth.cancel(); speaking=false;
+  // Stop browser TTS
+  synth.cancel();
+  // Stop any playing audio elements
+  audioQueue.forEach(a => { try{ a.pause(); a.src=''; }catch(e){} });
+  audioQueue = [];
+  audioPlaying = false;
+  speaking = false;
   const btn=document.getElementById('playBtn');
   btn.classList.remove('active');
   btn.innerHTML='▶️ <span>കേൾക്കൂ</span>';
 }
 
-document.getElementById('playBtn').addEventListener('click',()=>{
-  if(speaking){stopSpeech();return;}
-
-  // Get clean text — strip emojis, punctuation that TTS reads literally
-  const raw=document.getElementById('readerBody').innerText;
-  const text=raw
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu,'')  // emojis
-    .replace(/[🌙✨💫🪔🌟]/g,'')
-    .replace(/\.\.\./g,' ')                  // ellipsis → pause
-    .replace(/["""'']/g,'')                  // smart quotes
-    .replace(/—/g,', ')                      // em dash
-    .replace(/\n+/g,' ')                     // newlines → space
+function cleanTextForSpeech(raw){
+  return raw
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu,'')
+    .replace(/[🌙✨💫🪔🌟❤️🤍▶️⏹]/g,'')
+    .replace(/\.\.\./g,' ')
+    .replace(/["""'']/g,'')
+    .replace(/—/g,', ')
+    .replace(/\n+/g,' ')
     .trim();
+}
 
+// Split text into chunks of max 2400 chars, breaking at sentence boundaries
+function chunkText(text, maxLen=2400){
+  const chunks=[];
+  let remaining=text;
+  while(remaining.length > maxLen){
+    let cut = remaining.lastIndexOf('।', maxLen);
+    if(cut < 100) cut = remaining.lastIndexOf('.', maxLen);
+    if(cut < 100) cut = remaining.lastIndexOf(' ', maxLen);
+    if(cut < 100) cut = maxLen;
+    chunks.push(remaining.slice(0, cut+1).trim());
+    remaining = remaining.slice(cut+1).trim();
+  }
+  if(remaining) chunks.push(remaining);
+  return chunks;
+}
+
+async function fetchSarvamAudio(text, speaker){
+  const sk = sarvamKey || localStorage.getItem('nk_sarvam_key') || '';
+  if(!sk) throw new Error('NO_KEY');
+  const res = await fetch('https://api.sarvam.ai/text-to-speech',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','api-subscription-key': sk},
+    body: JSON.stringify({
+      inputs: [text],
+      target_language_code: 'ml-IN',
+      speaker: speaker,
+      model: 'bulbul:v3',
+      pace: 0.9,
+      enable_preprocessing: true
+    })
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error?.message || 'Sarvam error '+res.status);
+  }
+  const data = await res.json();
+  return data.audios[0]; // base64 WAV
+}
+
+function playAudioQueue(queue, onDone){
+  if(!queue.length){ onDone(); return; }
+  const b64 = queue.shift();
+  const audio = new Audio('data:audio/wav;base64,'+b64);
+  audioQueue.push(audio);
+  audio.onended = () => playAudioQueue(queue, onDone);
+  audio.onerror = () => playAudioQueue(queue, onDone);
+  audio.play().catch(()=> playAudioQueue(queue, onDone));
+}
+
+async function playSarvam(text, speaker){
+  const chunks = chunkText(text);
+  toast('🎙️ ശബ്ദം തയ്യാറാക്കുന്നു...');
+  const btn=document.getElementById('playBtn');
+  btn.classList.add('active');
+  btn.innerHTML='⏳ <span>ലോഡ്...</span>';
+
+  try{
+    // Fetch all chunks (can parallelise since they're ordered)
+    const audioData = await Promise.all(chunks.map(c => fetchSarvamAudio(c, speaker)));
+    if(!speaking) return; // user cancelled while loading
+    btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
+    playAudioQueue([...audioData], ()=>{
+      stopSpeech();
+    });
+  } catch(e){
+    if(e.message === 'NO_KEY'){
+      toast('⚠️ Sarvam key ഇല്ല — browser voice ഉപയോഗിക്കുന്നു');
+    } else {
+      toast('❌ Sarvam: '+(e.message||'Error'));
+    }
+    // Fallback to browser TTS
+    useBrowserTTS(text);
+  }
+}
+
+function useBrowserTTS(text){
   const utt=new SpeechSynthesisUtterance(text);
-  const voiceType=document.getElementById('voiceSel').value;
-
-  // Voices load async — wait if needed
   const proceed=(voices)=>{
     const mlVoices=voices.filter(v=>v.lang.startsWith('ml'));
     let chosen=mlVoices.length?mlVoices[0]:null;
     if(!chosen){
       const enVoices=voices.filter(v=>v.lang.startsWith('en'));
-      if(voiceType==='male') chosen=enVoices.find(v=>/male/i.test(v.name));
-      else chosen=enVoices.find(v=>/female/i.test(v.name));
-      if(!chosen&&enVoices.length) chosen=enVoices[0];
+      chosen=enVoices[0]||null;
     }
     if(chosen) utt.voice=chosen;
     utt.lang='ml-IN'; utt.rate=.85; utt.pitch=1.05;
     utt.onend=()=>stopSpeech();
     utt.onerror=()=>stopSpeech();
     synth.speak(utt);
-    speaking=true;
     const btn=document.getElementById('playBtn');
     btn.classList.add('active');
     btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
   };
-
   const voices=synth.getVoices();
-  if(voices.length){
-    proceed(voices);
+  if(voices.length) proceed(voices);
+  else synth.onvoiceschanged=()=>proceed(synth.getVoices());
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{
+  if(speaking){ stopSpeech(); return; }
+  speaking = true;
+  const raw=document.getElementById('readerBody').innerText;
+  const text=cleanTextForSpeech(raw);
+  const speaker=document.getElementById('voiceSel').value;
+  const sk = sarvamKey || localStorage.getItem('nk_sarvam_key') || '';
+  if(sk){
+    playSarvam(text, speaker);
   } else {
-    synth.onvoiceschanged=()=>proceed(synth.getVoices());
+    useBrowserTTS(text);
   }
 });
 
@@ -582,22 +673,22 @@ applyTheme();
 // ── Admin ──────────────────────────────────────────────────────────────────
 document.getElementById('adminBtn').addEventListener('click',()=>{
   document.getElementById('adminOverlay').classList.add('open');
-  document.getElementById('admPass').value='';
-  document.getElementById('admKey').value=localStorage.getItem('nk_shared_key')||'';
-  document.getElementById('admMsg').textContent='';
+  document.getElementById('admKey').value=localStorage.getItem('nk_key')||'';
+  document.getElementById('admSarvamKey').value=localStorage.getItem('nk_sarvam_key')||'';
 });
 document.getElementById('admCancel').addEventListener('click',()=>{
   document.getElementById('adminOverlay').classList.remove('open');
 });
 document.getElementById('admSave').addEventListener('click',()=>{
   const key=document.getElementById('admKey').value.trim();
-  if(key) localStorage.setItem('nk_shared_key',key);
-  else localStorage.removeItem('nk_shared_key');
-  apiKey=key;
-  if(key) localStorage.setItem('nk_key',key);
+  if(key){localStorage.setItem('nk_key',key); apiKey=key;}
+  else{localStorage.removeItem('nk_key'); apiKey='';}
+  const sk=document.getElementById('admSarvamKey').value.trim();
+  if(sk){localStorage.setItem('nk_sarvam_key',sk); sarvamKey=sk;}
+  else{localStorage.removeItem('nk_sarvam_key'); sarvamKey='';}
   document.getElementById('adminOverlay').classList.remove('open');
   updateApiWrap();
-  toast('✅ Key saved');
+  toast('✅ Keys saved');
 });
 
 // ── SW ─────────────────────────────────────────────────────────────────────
