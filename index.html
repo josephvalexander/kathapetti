@@ -413,27 +413,48 @@ function stopSpeech(){
 
 document.getElementById('playBtn').addEventListener('click',()=>{
   if(speaking){stopSpeech();return;}
-  const text=document.getElementById('readerBody').innerText;
+
+  // Get clean text — strip emojis, punctuation that TTS reads literally
+  const raw=document.getElementById('readerBody').innerText;
+  const text=raw
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu,'')  // emojis
+    .replace(/[🌙✨💫🪔🌟]/g,'')
+    .replace(/\.\.\./g,' ')                  // ellipsis → pause
+    .replace(/["""'']/g,'')                  // smart quotes
+    .replace(/—/g,', ')                      // em dash
+    .replace(/\n+/g,' ')                     // newlines → space
+    .trim();
+
   const utt=new SpeechSynthesisUtterance(text);
   const voiceType=document.getElementById('voiceSel').value;
+
+  // Voices load async — wait if needed
+  const proceed=(voices)=>{
+    const mlVoices=voices.filter(v=>v.lang.startsWith('ml'));
+    let chosen=mlVoices.length?mlVoices[0]:null;
+    if(!chosen){
+      const enVoices=voices.filter(v=>v.lang.startsWith('en'));
+      if(voiceType==='male') chosen=enVoices.find(v=>/male/i.test(v.name));
+      else chosen=enVoices.find(v=>/female/i.test(v.name));
+      if(!chosen&&enVoices.length) chosen=enVoices[0];
+    }
+    if(chosen) utt.voice=chosen;
+    utt.lang='ml-IN'; utt.rate=.85; utt.pitch=1.05;
+    utt.onend=()=>stopSpeech();
+    utt.onerror=()=>stopSpeech();
+    synth.speak(utt);
+    speaking=true;
+    const btn=document.getElementById('playBtn');
+    btn.classList.add('active');
+    btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
+  };
+
   const voices=synth.getVoices();
-  const mlVoices=voices.filter(v=>v.lang.startsWith('ml'));
-  let chosen=mlVoices.length?mlVoices[0]:null;
-  if(!chosen){
-    const enVoices=voices.filter(v=>v.lang.startsWith('en'));
-    if(voiceType==='male') chosen=enVoices.find(v=>/male/i.test(v.name));
-    else chosen=enVoices.find(v=>/female/i.test(v.name));
-    if(!chosen&&enVoices.length) chosen=enVoices[0];
+  if(voices.length){
+    proceed(voices);
+  } else {
+    synth.onvoiceschanged=()=>proceed(synth.getVoices());
   }
-  if(chosen) utt.voice=chosen;
-  utt.lang='ml-IN'; utt.rate=.85; utt.pitch=1.1;
-  utt.onend=()=>stopSpeech();
-  utt.onerror=()=>stopSpeech();
-  synth.speak(utt);
-  speaking=true;
-  const btn=document.getElementById('playBtn');
-  btn.classList.add('active');
-  btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
 });
 
 // ── AI Generation ──────────────────────────────────────────────────────────
@@ -466,18 +487,17 @@ Write a long, immersive bedtime story of 1200-1500 words. Include:
 - Rich natural dialogue between characters
 - A problem or challenge that builds gradually across multiple scenes
 - Emotional moments, sensory details, and descriptive language
-- Sub-events or smaller incidents that enrich the main plot
 - A satisfying resolution with a clear moral
 - Gentle, soothing pacing suitable for bedtime
 
-Respond ONLY with a valid JSON object, no markdown, no extra text:
-{
-  "title": "<title in Malayalam>",
-  "titleEn": "<title in English>",
-  "emoji": "<one emoji from: ${emojiSet}>",
-  "text": "<full story in Malayalam, 1200-1500 words, rich descriptions, dialogue between characters, build-up and resolution, use \\n between paragraphs>",
-  "moral": "<one-line moral in Malayalam>"
-}`;
+Respond using EXACTLY this format with these exact marker lines, nothing else:
+
+TITLE_ML: <story title in Malayalam>
+TITLE_EN: <story title in English>
+EMOJI: <one emoji from: ${emojiSet}>
+MORAL: <one sentence moral in Malayalam>
+STORY:
+<full story text here, paragraphs separated by blank lines>`;
 
   try{
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
@@ -486,7 +506,7 @@ Respond ONLY with a valid JSON object, no markdown, no extra text:
       body:JSON.stringify({
         model:'llama-3.3-70b-versatile',
         messages:[{role:'user',content:prompt}],
-        temperature:.8, max_tokens:3000
+        temperature:.8, max_tokens:2600
       })
     });
     if(!res.ok){
@@ -494,18 +514,27 @@ Respond ONLY with a valid JSON object, no markdown, no extra text:
       throw new Error(err.error?.message||'API error '+res.status);
     }
     const data=await res.json();
-    let raw=data.choices[0].message.content.trim();
-    raw=raw.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(raw);
+    const raw=data.choices[0].message.content.trim();
 
+    // Parse delimited plain text response
+    const get=(key)=>{
+      const m=raw.match(new RegExp(`^${key}:\\s*(.+)$`,'m'));
+      return m?m[1].trim():'';
+    };
+    const storyMatch=raw.match(/^STORY:\s*\n([\s\S]+)$/m);
+    const storyText=storyMatch?storyMatch[1].trim():'';
+
+    if(!storyText) throw new Error('കഥ ലഭിച്ചില്ല. വീണ്ടും ശ്രമിക്കൂ.');
+
+    const moral=get('MORAL');
     const story={
       id:'gen_'+Date.now(),
       cat, age,
-      emoji: parsed.emoji||'✨',
-      dur: Math.max(12,Math.round((parsed.text||'').split(' ').length/80)),
-      title: parsed.title||'കഥ',
-      titleEn: parsed.titleEn||'',
-      text: (parsed.text||'')+'\n\n🌙 '+( parsed.moral||''),
+      emoji: get('EMOJI')||'✨',
+      dur: Math.max(12,Math.round(storyText.split(' ').length/80)),
+      title: get('TITLE_ML')||'കഥ',
+      titleEn: get('TITLE_EN')||'',
+      text: storyText+(moral?'\n\n🌙 '+moral:''),
     };
     stories.unshift(story); save();
     toast('✨ കഥ തയ്യാർ!');
