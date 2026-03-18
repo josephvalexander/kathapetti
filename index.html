@@ -437,7 +437,7 @@ function cleanTextForSpeech(raw){
 }
 
 // Split text into chunks of max 2400 chars, breaking at sentence boundaries
-function chunkText(text, maxLen=2400){
+function chunkText(text, maxLen=480){
   const chunks=[];
   let remaining=text;
   while(remaining.length > maxLen){
@@ -493,8 +493,14 @@ async function playSarvam(text, speaker){
   btn.innerHTML='⏳ <span>ലോഡ്...</span>';
 
   try{
-    // Fetch all chunks (can parallelise since they're ordered)
-    const audioData = await Promise.all(chunks.map(c => fetchSarvamAudio(c, speaker)));
+    // Fetch chunks in batches of 3 to avoid rate limits
+    const audioData = [];
+    for(let i=0; i<chunks.length; i+=3){
+      const batch = chunks.slice(i, i+3);
+      const results = await Promise.all(batch.map(c => fetchSarvamAudio(c, speaker)));
+      audioData.push(...results);
+      if(!speaking) return; // user cancelled
+    }
     if(!speaking) return; // user cancelled while loading
     btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
     playAudioQueue([...audioData], ()=>{
