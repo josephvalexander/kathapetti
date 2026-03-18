@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>കഥപ്പെട്ടി</title>
+<link rel="manifest" href="manifest.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
+<meta name="theme-color" content="#0a0a1a"/>
+<style>
+:root{
+  --bg:#0a0a1a;--bg2:#12122a;--bg3:#1a1a3a;
+  --gold:#d4a843;--gold2:#f0c060;
+  --text:#e8e0d0;--text2:#b0a890;
+  --card:#161630;--card2:#1e1e40;
+  --border:#2a2a50;
+  --radius:14px;
+}
+.light{
+  --bg:#f5f0e8;--bg2:#ede6d8;--bg3:#e0d8c8;
+  --gold:#b8860b;--gold2:#9a6e00;
+  --text:#2a2010;--text2:#5a4e38;
+  --card:#faf6ee;--card2:#f0e8d8;
+  --border:#d0c8b0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;min-height:100vh;transition:background .3s,color .3s}
+canvas#stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.6}
+.light canvas#stars{opacity:.1}
+#app{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:0 16px 80px}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 10px}
+.logo{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold);letter-spacing:.05em;line-height:1.2}
+.logo span{display:block;font-family:'Noto Serif Malayalam',serif;font-size:.85rem;color:var(--text2);font-weight:400;letter-spacing:.02em}
+.hbtns{display:flex;gap:8px}
+.hbtn{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.hbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* MOON */
+.moon-wrap{text-align:center;padding:10px 0 4px}
+.moon{font-size:3.5rem;filter:drop-shadow(0 0 18px #d4a84388);animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{filter:drop-shadow(0 0 18px #d4a84388)}50%{filter:drop-shadow(0 0 30px #d4a843cc)}}
+
+/* CATEGORIES */
+.cats{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{background:var(--card);border:1px solid var(--border);color:var(--text2);border-radius:20px;padding:6px 14px;font-size:.82rem;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'Noto Serif Malayalam',serif}
+.cat.active,.cat:hover{background:var(--gold);border-color:var(--gold);color:#0a0a1a;font-weight:600}
+
+/* SECTION TITLE */
+.sec{display:flex;align-items:center;gap:10px;margin:18px 0 12px}
+.sec h2{font-family:'Noto Serif Malayalam',serif;font-size:1rem;color:var(--gold);font-weight:600}
+.sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--gold)40%,transparent)}
+
+/* GENERATE CARD */
+.gen-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.gen-card h3{font-family:'Noto Serif Malayalam',serif;color:var(--gold);margin-bottom:14px;font-size:1rem}
+.gen-row{display:flex;gap-10px;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.gen-row select,.gen-row input{flex:1;min-width:130px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem;font-family:'Noto Serif Malayalam',serif}
+.gen-row select:focus,.gen-row input:focus{outline:none;border-color:var(--gold)}
+.btn-gen{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0a1a;border:none;border-radius:10px;padding:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Noto Serif Malayalam',serif;transition:opacity .2s}
+.btn-gen:disabled{opacity:.5;cursor:not-allowed}
+.api-wrap{margin-top:10px}
+.api-wrap label{font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px}
+.api-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.82rem}
+.api-wrap input:focus{outline:none;border-color:var(--gold)}
+
+/* STORY CARDS */
+.story-grid{display:flex;flex-direction:column;gap:12px}
+.story-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;position:relative}
+.story-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 6px 20px #0005}
+.sc-top{display:flex;align-items:flex-start;gap:12px}
+.sc-emoji{font-size:2rem;line-height:1}
+.sc-info{flex:1}
+.sc-title{font-family:'Noto Serif Malayalam',serif;font-size:1rem;color:var(--text);font-weight:600;line-height:1.4}
+.sc-title-en{font-size:.8rem;color:var(--text2);margin-top:2px}
+.sc-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.tag{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:2px 10px;font-size:.73rem;color:var(--text2)}
+.sc-fav{position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;opacity:.5;transition:opacity .2s}
+.sc-fav:hover,.sc-fav.on{opacity:1}
+.read-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block;margin-left:6px;vertical-align:middle}
+
+/* READER */
+.reader-overlay{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .35s ease}
+.reader-overlay.open{transform:translateY(0)}
+.reader-head{display:flex;align-items:center;gap:12px;padding:16px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.reader-back{background:none;border:none;color:var(--gold);font-size:1.4rem;cursor:pointer;padding:4px}
+.reader-title{flex:1;font-family:'Noto Serif Malayalam',serif;font-size:1.1rem;color:var(--text);font-weight:600}
+.reader-body{flex:1;overflow-y:auto;padding:20px 18px;line-height:2;font-size:1.05rem;font-family:'Noto Serif Malayalam',serif}
+.reader-body p{margin-bottom:1.2em}
+.reader-foot{border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.rf-btn{flex:1;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;min-width:70px}
+.rf-btn:hover{border-color:var(--gold);color:var(--gold)}
+.rf-btn.active{background:var(--gold);border-color:var(--gold);color:#0a0a1a}
+.voice-sel{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 8px;font-size:.82rem;cursor:pointer}
+
+/* ADMIN */
+.admin-overlay{position:fixed;inset:0;z-index:200;background:#0009;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.admin-overlay.open{opacity:1;pointer-events:all}
+.admin-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:420px}
+.admin-box h3{font-family:'Cinzel Decorative',serif;color:var(--gold);margin-bottom:16px;font-size:1rem}
+.admin-box label{font-size:.82rem;color:var(--text2);display:block;margin:10px 0 4px}
+.admin-box input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.9rem}
+.admin-box input:focus{outline:none;border-color:var(--gold)}
+.adm-btns{display:flex;gap:8px;margin-top:16px}
+.adm-btns button{flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:.9rem;border:1px solid var(--border)}
+.adm-save{background:var(--gold);color:#0a0a1a;border-color:var(--gold);font-weight:700}
+.adm-cancel{background:var(--card);color:var(--text)}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:40px 20px;color:var(--text2);font-family:'Noto Serif Malayalam',serif;line-height:2}
+.loader{display:inline-block;width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:20px auto;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:10px 20px;font-size:.88rem;z-index:999;animation:fadeup .3s ease;pointer-events:none;font-family:'Noto Serif Malayalam',serif;white-space:nowrap}
+@keyframes fadeup{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* NAV */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:50}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;cursor:pointer;gap:3px;color:var(--text2);font-size:.65rem;font-family:'Noto Serif Malayalam',serif;transition:color .2s}
+.nav-item.active,.nav-item:hover{color:var(--gold)}
+.nav-icon{font-size:1.3rem}
+
+/* TABS */
+.tab{display:none}.tab.active{display:block}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="app">
+  <header>
+    <div class="logo">കഥപ്പെട്ടി<span>കേൾക്കാം വളരാം</span></div>
+    <div class="hbtns">
+      <button class="hbtn" id="adminBtn" title="Admin">⚙️</button>
+      <button class="hbtn" id="themeBtn" title="Toggle theme">☀️</button>
+    </div>
+  </header>
+
+  <!-- HOME TAB -->
+  <div class="tab active" id="tab-home">
+    <div class="moon-wrap"><div class="moon">🌙</div></div>
+
+    <div class="cats" id="catBar"></div>
+
+    <div class="gen-card">
+      <h3>✨ പുതിയ കഥ ഉണ്ടാക്കൂ</h3>
+      <div class="gen-row">
+        <select id="genCat"></select>
+        <select id="genAge">
+          <option value="3-5">3–5 വയസ്സ്</option>
+          <option value="5-7" selected>5–7 വയസ്സ്</option>
+          <option value="7-9">7–9 വയസ്സ്</option>
+        </select>
+      </div>
+      <button class="btn-gen" id="genBtn">🌟 കഥ ഉണ്ടാക്കൂ</button>
+      <div class="api-wrap" id="apiWrap">
+        <label>Groq API Key (groq.com → free)</label>
+        <input type="password" id="apiKeyInput" placeholder="gsk_..."/>
+      </div>
+    </div>
+
+    <div id="homeStories"></div>
+  </div>
+
+  <!-- FAVORITES TAB -->
+  <div class="tab" id="tab-fav">
+    <div class="sec"><h2>❤️ പ്രിയ കഥകൾ</h2><div class="sec-line"></div></div>
+    <div id="favStories"></div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div class="tab" id="tab-hist">
+    <div class="sec"><h2>📖 വായിച്ച കഥകൾ</h2><div class="sec-line"></div></div>
+    <div id="histStories"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav>
+  <div class="nav-item active" data-tab="home"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item" data-tab="fav"><div class="nav-icon">❤️</div>Favourites</div>
+  <div class="nav-item" data-tab="hist"><div class="nav-icon">📖</div>History</div>
+</nav>
+
+<!-- READER OVERLAY -->
+<div class="reader-overlay" id="reader">
+  <div class="reader-head">
+    <button class="reader-back" id="readerBack">←</button>
+    <div class="reader-title" id="readerTitle"></div>
+    <button class="sc-fav" id="readerFav">🤍</button>
+  </div>
+  <div class="reader-body" id="readerBody"></div>
+  <div class="reader-foot">
+    <button class="rf-btn" id="playBtn">▶️ <span>കേൾക്കൂ</span></button>
+    <select class="voice-sel" id="voiceSel">
+      <option value="female">👩 Female</option>
+      <option value="male">👨 Male</option>
+    </select>
+    <button class="rf-btn" id="readerFavBtn">🤍 Save</button>
+  </div>
+</div>
+
+<!-- ADMIN OVERLAY -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-box">
+    <h3>⚙️ Admin</h3>
+    <label>Admin Password</label>
+    <input type="password" id="admPass" placeholder="Password"/>
+    <label>Shared Groq API Key</label>
+    <input type="password" id="admKey" placeholder="gsk_..."/>
+    <div class="adm-btns">
+      <button class="adm-cancel" id="admCancel">Cancel</button>
+      <button class="adm-save" id="admSave">Save</button>
+    </div>
+    <p id="admMsg" style="font-size:.8rem;margin-top:10px;color:var(--gold)"></p>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const ADMIN_PASS = 'nila2025';
+let stories = JSON.parse(localStorage.getItem('nk_stories') || '[]');
+let favs    = JSON.parse(localStorage.getItem('nk_favs')    || '[]');
+let hist    = JSON.parse(localStorage.getItem('nk_hist')    || '[]');
+let apiKey  = localStorage.getItem('nk_key') || '';
+let activeCat = 'all';
+let activeTab = 'home';
+let currentStory = null;
+let synth = window.speechSynthesis;
+let speaking = false;
+
+const CATS = [
+  {id:'all',       label:'എല്ലാം',          emoji:'📚'},
+  {id:'panchatantra',label:'പഞ്ചതന്ത്രം',   emoji:'🦁'},
+  {id:'jataka',    label:'ജാതക കഥകൾ',       emoji:'🐘'},
+  {id:'folk',      label:'നാടോടി കഥകൾ',      emoji:'🏡'},
+  {id:'animal',    label:'മൃഗ കഥകൾ',         emoji:'🦋'},
+  {id:'wisdom',    label:'ജ്ഞാന കഥകൾ',       emoji:'🪔'},
+  {id:'kerala',    label:'കേരള കഥകൾ',        emoji:'🌴'},
+];
+
+// ── Stars ──────────────────────────────────────────────────────────────────
+(function(){
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W,H,pts=[];
+  function init(){
+    W=c.width=window.innerWidth; H=c.height=window.innerHeight;
+    pts=Array.from({length:120},()=>({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.4+.3, a:Math.random()
+    }));
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.a+=.005; if(p.a>Math.PI*2)p.a=0;
+      ctx.globalAlpha=.4+Math.sin(p.a)*.3;
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  init(); draw();
+  window.addEventListener('resize',init);
+})();
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function save(){
+  localStorage.setItem('nk_stories', JSON.stringify(stories));
+  localStorage.setItem('nk_favs',    JSON.stringify(favs));
+  localStorage.setItem('nk_hist',    JSON.stringify(hist));
+}
+function toast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+}
+function getKey(){ return apiKey || localStorage.getItem('nk_shared_key') || ''; }
+
+// ── Category bar ───────────────────────────────────────────────────────────
+function renderCatBar(){
+  const bar = document.getElementById('catBar');
+  bar.innerHTML = CATS.map(c=>`
+    <button class="cat${c.id===activeCat?' active':''}" data-id="${c.id}">
+      ${c.emoji} ${c.label}
+    </button>`).join('');
+  bar.querySelectorAll('.cat').forEach(b=>b.addEventListener('click',()=>{
+    activeCat=b.dataset.id; renderCatBar(); renderHomeStories();
+  }));
+}
+
+// ── Gen category select ────────────────────────────────────────────────────
+function initGenCat(){
+  const sel = document.getElementById('genCat');
+  sel.innerHTML = CATS.filter(c=>c.id!=='all').map(c=>
+    `<option value="${c.id}">${c.emoji} ${c.label}</option>`).join('');
+}
+
+// ── Story card HTML ────────────────────────────────────────────────────────
+function cardHTML(s){
+  const isFav = favs.includes(s.id);
+  const isRead = hist.includes(s.id);
+  const catLabel = CATS.find(c=>c.id===s.cat)?.label || s.cat;
+  return `
+    <div class="story-card" data-id="${s.id}">
+      <div class="sc-top">
+        <div class="sc-emoji">${s.emoji}</div>
+        <div class="sc-info">
+          <div class="sc-title">${s.title}${isRead?'<span class="read-dot"></span>':''}</div>
+          <div class="sc-title-en">${s.titleEn||''}</div>
+          <div class="sc-meta">
+            <span class="tag">${catLabel}</span>
+            <span class="tag">🕐 ${s.dur}min</span>
+            <span class="tag">👶 ${s.age}</span>
+          </div>
+        </div>
+      </div>
+      <button class="sc-fav ${isFav?'on':''}" data-fav="${s.id}">${isFav?'❤️':'🤍'}</button>
+    </div>`;
+}
+
+function attachCardEvents(container){
+  container.querySelectorAll('.story-card').forEach(card=>{
+    card.addEventListener('click',e=>{
+      if(e.target.closest('.sc-fav'))return;
+      openReader(stories.find(s=>s.id===card.dataset.id));
+    });
+  });
+  container.querySelectorAll('.sc-fav').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const id=btn.dataset.fav;
+      if(favs.includes(id)){favs=favs.filter(f=>f!==id); btn.textContent='🤍'; btn.classList.remove('on'); toast('Removed from favourites');}
+      else{favs.push(id); btn.textContent='❤️'; btn.classList.add('on'); toast('❤️ Added to favourites');}
+      save(); renderFavStories();
+    });
+  });
+}
+
+// ── Render tabs ────────────────────────────────────────────────────────────
+function renderHomeStories(){
+  const el = document.getElementById('homeStories');
+  let list = activeCat==='all' ? stories : stories.filter(s=>s.cat===activeCat);
+  if(!list.length){
+    el.innerHTML=`<div class="empty">
+      <p style="font-size:2rem">🌙</p>
+      <p>ഇവിടെ ഇനിയും കഥകൾ ഇല്ല.</p>
+      <p>മുകളിൽ നിന്ന് ഒരു കഥ ഉണ്ടാക്കൂ!</p>
+    </div>`;
+    return;
+  }
+  const div=document.createElement('div'); div.className='story-grid';
+  div.innerHTML=list.map(cardHTML).join('');
+  el.innerHTML=''; el.appendChild(div);
+  attachCardEvents(el);
+}
+
+function renderFavStories(){
+  const el=document.getElementById('favStories');
+  const list=stories.filter(s=>favs.includes(s.id));
+  if(!list.length){el.innerHTML=`<div class="empty">❤️<br>ഒരു കഥ ഹൃദയത്തോട് ചേർക്കൂ!</div>`;return;}
+  const div=document.createElement('div'); div.className='story-grid';
+  div.innerHTML=list.map(cardHTML).join('');
+  el.innerHTML=''; el.appendChild(div); attachCardEvents(el);
+}
+
+function renderHistStories(){
+  const el=document.getElementById('histStories');
+  const list=stories.filter(s=>hist.includes(s.id));
+  if(!list.length){el.innerHTML=`<div class="empty">📖<br>ഇനിയും ഒരു കഥ വായിക്കൂ!</div>`;return;}
+  const div=document.createElement('div'); div.className='story-grid';
+  div.innerHTML=[...list].reverse().map(cardHTML).join('');
+  el.innerHTML=''; el.appendChild(div); attachCardEvents(el);
+}
+
+// ── Reader ─────────────────────────────────────────────────────────────────
+function openReader(s){
+  currentStory=s;
+  if(!hist.includes(s.id)){hist.push(s.id); save();}
+  document.getElementById('readerTitle').textContent=s.title;
+  document.getElementById('readerBody').innerHTML=s.text.split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+  const isFav=favs.includes(s.id);
+  document.getElementById('readerFav').textContent=isFav?'❤️':'🤍';
+  document.getElementById('readerFavBtn').innerHTML=isFav?'❤️ Saved':'🤍 Save';
+  document.getElementById('reader').classList.add('open');
+  renderHomeStories(); renderHistStories();
+}
+
+document.getElementById('readerBack').addEventListener('click',()=>{
+  stopSpeech();
+  document.getElementById('reader').classList.remove('open');
+});
+
+function toggleFavCurrent(){
+  if(!currentStory)return;
+  const id=currentStory.id;
+  const on=favs.includes(id);
+  if(on){favs=favs.filter(f=>f!==id);toast('Removed from favourites');}
+  else{favs.push(id);toast('❤️ Saved to favourites');}
+  save();
+  document.getElementById('readerFav').textContent=favs.includes(id)?'❤️':'🤍';
+  document.getElementById('readerFavBtn').innerHTML=favs.includes(id)?'❤️ Saved':'🤍 Save';
+  renderFavStories(); renderHomeStories();
+}
+document.getElementById('readerFav').addEventListener('click',toggleFavCurrent);
+document.getElementById('readerFavBtn').addEventListener('click',toggleFavCurrent);
+
+// ── Speech ─────────────────────────────────────────────────────────────────
+function stopSpeech(){
+  synth.cancel(); speaking=false;
+  const btn=document.getElementById('playBtn');
+  btn.classList.remove('active');
+  btn.innerHTML='▶️ <span>കേൾക്കൂ</span>';
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{
+  if(speaking){stopSpeech();return;}
+  const text=document.getElementById('readerBody').innerText;
+  const utt=new SpeechSynthesisUtterance(text);
+  const voiceType=document.getElementById('voiceSel').value;
+  const voices=synth.getVoices();
+  const mlVoices=voices.filter(v=>v.lang.startsWith('ml'));
+  let chosen=mlVoices.length?mlVoices[0]:null;
+  if(!chosen){
+    const enVoices=voices.filter(v=>v.lang.startsWith('en'));
+    if(voiceType==='male') chosen=enVoices.find(v=>/male/i.test(v.name));
+    else chosen=enVoices.find(v=>/female/i.test(v.name));
+    if(!chosen&&enVoices.length) chosen=enVoices[0];
+  }
+  if(chosen) utt.voice=chosen;
+  utt.lang='ml-IN'; utt.rate=.85; utt.pitch=1.1;
+  utt.onend=()=>stopSpeech();
+  utt.onerror=()=>stopSpeech();
+  synth.speak(utt);
+  speaking=true;
+  const btn=document.getElementById('playBtn');
+  btn.classList.add('active');
+  btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
+});
+
+// ── AI Generation ──────────────────────────────────────────────────────────
+document.getElementById('genBtn').addEventListener('click', async()=>{
+  const key=document.getElementById('apiKeyInput').value.trim() || getKey();
+  if(!key){toast('⚠️ Groq API key ആവശ്യമാണ്'); document.getElementById('apiKeyInput').focus(); return;}
+  apiKey=key; localStorage.setItem('nk_key',key);
+
+  const cat=document.getElementById('genCat').value;
+  const age=document.getElementById('genAge').value;
+  const catLabel=CATS.find(c=>c.id===cat)?.label||cat;
+  const catLabelEn=({panchatantra:'Panchatantra',jataka:'Jataka',folk:'Folk tale',animal:'Animal tale',wisdom:'Wisdom tale',kerala:'Kerala story'})[cat]||cat;
+  const ageDesc=age==='3-5'?'very young children (3-5), simple words':age==='5-7'?'children (5-7), moderate complexity':'older children (7-9), richer vocabulary';
+
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true; btn.textContent='🌙 ഉണ്ടാക്കുന്നു...';
+  document.getElementById('homeStories').innerHTML='<div class="loader"></div>';
+
+  const emojis={panchatantra:'🦁🐘🦊🐢🐍',jataka:'🐘🦌🦢🐒🐠',folk:'🏡🌺🌾🪔✨',animal:'🦋🦚🐿️🦜🦝',wisdom:'🪔💫🌟🎋🏺',kerala:'🌴🌺🌊🥥🎭'};
+  const emojiSet=emojis[cat]||'✨🌟💫';
+
+  const prompt=`You are a Malayalam children's storyteller. Write an original, engaging bedtime story in Malayalam script for ${ageDesc}.
+
+Category: ${catLabelEn}
+Language: Malayalam (use authentic Malayalam script, not transliteration)
+
+Respond ONLY with a valid JSON object, no markdown, no extra text:
+{
+  "title": "<title in Malayalam>",
+  "titleEn": "<title in English>",
+  "emoji": "<one emoji from: ${emojiSet}>",
+  "text": "<full story in Malayalam, 250-400 words, use \\n between paragraphs>",
+  "moral": "<one-line moral in Malayalam>"
+}`;
+
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[{role:'user',content:prompt}],
+        temperature:.8, max_tokens:1200
+      })
+    });
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err.error?.message||'API error '+res.status);
+    }
+    const data=await res.json();
+    let raw=data.choices[0].message.content.trim();
+    raw=raw.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+
+    const story={
+      id:'gen_'+Date.now(),
+      cat, age,
+      emoji: parsed.emoji||'✨',
+      dur: Math.max(3,Math.round((parsed.text||'').split(' ').length/80)),
+      title: parsed.title||'കഥ',
+      titleEn: parsed.titleEn||'',
+      text: (parsed.text||'')+'\n\n🌙 '+( parsed.moral||''),
+    };
+    stories.unshift(story); save();
+    toast('✨ കഥ തയ്യാർ!');
+    openReader(story);
+  }catch(e){
+    toast('❌ '+(e.message||'Error'));
+    document.getElementById('homeStories').innerHTML='';
+  }finally{
+    btn.disabled=false; btn.textContent='🌟 കഥ ഉണ്ടാക്കൂ';
+    renderHomeStories();
+  }
+});
+
+// ── API key visibility ─────────────────────────────────────────────────────
+function updateApiWrap(){
+  const hasKey=!!(getKey());
+  document.getElementById('apiWrap').style.display=hasKey?'none':'block';
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    const tab=item.dataset.tab;
+    activeTab=tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+tab).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    if(tab==='fav') renderFavStories();
+    if(tab==='hist') renderHistStories();
+  });
+});
+
+// ── Theme ──────────────────────────────────────────────────────────────────
+let light=localStorage.getItem('nk_theme')==='light';
+function applyTheme(){
+  document.documentElement.classList.toggle('light',light);
+  document.getElementById('themeBtn').textContent=light?'🌙':'☀️';
+}
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  light=!light; localStorage.setItem('nk_theme',light?'light':'dark'); applyTheme();
+});
+applyTheme();
+
+// ── Admin ──────────────────────────────────────────────────────────────────
+document.getElementById('adminBtn').addEventListener('click',()=>{
+  document.getElementById('adminOverlay').classList.add('open');
+  document.getElementById('admPass').value='';
+  document.getElementById('admKey').value=localStorage.getItem('nk_shared_key')||'';
+  document.getElementById('admMsg').textContent='';
+});
+document.getElementById('admCancel').addEventListener('click',()=>{
+  document.getElementById('adminOverlay').classList.remove('open');
+});
+document.getElementById('admSave').addEventListener('click',()=>{
+  const pass=document.getElementById('admPass').value;
+  if(pass!==ADMIN_PASS){document.getElementById('admMsg').textContent='❌ Incorrect password';return;}
+  const key=document.getElementById('admKey').value.trim();
+  if(key) localStorage.setItem('nk_shared_key',key);
+  else localStorage.removeItem('nk_shared_key');
+  document.getElementById('adminOverlay').classList.remove('open');
+  updateApiWrap();
+  toast('✅ Settings saved');
+});
+
+// ── SW ─────────────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderCatBar();
+initGenCat();
+renderHomeStories();
+updateApiWrap();
+</script>
+</body>
+</html>

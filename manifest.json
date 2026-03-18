@@ -1,0 +1,17 @@
+{
+  "name": "കഥപ്പെട്ടി",
+  "short_name": "കഥപ്പെട്ടി",
+  "description": "കേൾക്കാം വളരാം — Malayalam bedtime stories for children",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230a0a1a' rx='32'/><text y='130' x='50%' text-anchor='middle' font-size='120'>🌙</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
