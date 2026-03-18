@@ -460,20 +460,22 @@ document.getElementById('genBtn').addEventListener('click', async()=>{
 Category: ${catLabelEn}
 Language: Malayalam (use authentic Malayalam script, not transliteration)
 
-Write a long, immersive bedtime story of 900-1200 words. Include:
-- A vivid scene-setting opening
-- Well-developed characters with names
-- Natural dialogue between characters
-- A problem or challenge that builds gradually
-- Emotional moments and sensory details
+Write a long, immersive bedtime story of 1200-1500 words. Include:
+- A vivid scene-setting opening (at least 2 paragraphs)
+- Well-developed characters with names and personalities
+- Rich natural dialogue between characters
+- A problem or challenge that builds gradually across multiple scenes
+- Emotional moments, sensory details, and descriptive language
+- Sub-events or smaller incidents that enrich the main plot
 - A satisfying resolution with a clear moral
+- Gentle, soothing pacing suitable for bedtime
 
 Respond ONLY with a valid JSON object, no markdown, no extra text:
 {
   "title": "<title in Malayalam>",
   "titleEn": "<title in English>",
   "emoji": "<one emoji from: ${emojiSet}>",
-  "text": "<full story in Malayalam, 900-1200 words, rich descriptions, dialogue between characters, build-up and resolution, use \\n between paragraphs>",
+  "text": "<full story in Malayalam, 1200-1500 words, rich descriptions, dialogue between characters, build-up and resolution, use \\n between paragraphs>",
   "moral": "<one-line moral in Malayalam>"
 }`;
 
@@ -500,7 +502,7 @@ Respond ONLY with a valid JSON object, no markdown, no extra text:
       id:'gen_'+Date.now(),
       cat, age,
       emoji: parsed.emoji||'✨',
-      dur: Math.max(10,Math.round((parsed.text||'').split(' ').length/80)),
+      dur: Math.max(12,Math.round((parsed.text||'').split(' ').length/80)),
       title: parsed.title||'കഥ',
       titleEn: parsed.titleEn||'',
       text: (parsed.text||'')+'\n\n🌙 '+( parsed.moral||''),
