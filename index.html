@@ -193,11 +193,12 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
   <div class="reader-foot">
     <button class="rf-btn" id="playBtn">▶️ <span>കേൾക്കൂ</span></button>
     <select class="voice-sel" id="voiceSel">
-      <option value="anand">👨 Anand</option>
+      <option value="anushka">👩 Anushka</option>
       <option value="kavitha">👩 Kavitha</option>
-      <option value="maya">👩 Maya</option>
       <option value="roopa">👩 Roopa</option>
+      <option value="anand">👨 Anand</option>
       <option value="mani">👨 Mani</option>
+      <option value="abhilash">👨 Abhilash</option>
     </select>
     <button class="rf-btn" id="readerFavBtn">🤍 Save</button>
   </div>
@@ -408,15 +409,42 @@ function toggleFavCurrent(){
 document.getElementById('readerFav').addEventListener('click',toggleFavCurrent);
 document.getElementById('readerFavBtn').addEventListener('click',toggleFavCurrent);
 
+// ── Audio Cache (IndexedDB) ────────────────────────────────────────────────
+const DB_NAME='kathapetti_audio',DB_VER=1,STORE='audio';
+let db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore(STORE);
+    req.onsuccess=e=>{db=e.target.result;res(db);};
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function cacheGet(key){
+  if(!db)await openDB().catch(()=>{});if(!db)return null;
+  return new Promise(res=>{
+    const req=db.transaction(STORE,'readonly').objectStore(STORE).get(key);
+    req.onsuccess=()=>res(req.result||null);req.onerror=()=>res(null);
+  });
+}
+async function cacheSet(key,val){
+  if(!db)await openDB().catch(()=>{});if(!db)return;
+  return new Promise(res=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(val,key);
+    tx.oncomplete=()=>res();tx.onerror=()=>res();
+  });
+}
+openDB().catch(()=>{});
+
 // ── Speech ─────────────────────────────────────────────────────────────────
 let audioQueue = [];
 let audioPlaying = false;
+let currentAudio = null;
 
 function stopSpeech(){
-  // Stop browser TTS
   synth.cancel();
-  // Stop any playing audio elements
-  audioQueue.forEach(a => { try{ a.pause(); a.src=''; }catch(e){} });
+  if(currentAudio){ currentAudio.pause(); currentAudio.src=''; currentAudio=null; }
   audioQueue = [];
   audioPlaying = false;
   speaking = false;
@@ -462,8 +490,10 @@ async function fetchSarvamAudio(text, speaker){
       inputs: [text],
       target_language_code: 'ml-IN',
       speaker: speaker,
-      model: 'bulbul:v3',
+      model: 'bulbul:v2',
       pace: 0.9,
+      pitch: 0,
+      loudness: 1.2,
       enable_preprocessing: true
     })
   });
@@ -476,16 +506,26 @@ async function fetchSarvamAudio(text, speaker){
 }
 
 function playAudioQueue(queue, onDone){
-  if(!queue.length){ onDone(); return; }
+  if(!queue.length || !speaking){ onDone(); return; }
   const b64 = queue.shift();
   const audio = new Audio('data:audio/wav;base64,'+b64);
-  audioQueue.push(audio);
-  audio.onended = () => playAudioQueue(queue, onDone);
-  audio.onerror = () => playAudioQueue(queue, onDone);
-  audio.play().catch(()=> playAudioQueue(queue, onDone));
+  currentAudio = audio;
+  audio.onended = () => { currentAudio=null; playAudioQueue(queue, onDone); };
+  audio.onerror = () => { currentAudio=null; playAudioQueue(queue, onDone); };
+  audio.play().catch(()=>{ currentAudio=null; playAudioQueue(queue, onDone); });
 }
 
-async function playSarvam(text, speaker){
+async function playSarvam(storyId, text, speaker){
+  const cacheKey=`${storyId}_${speaker}`;
+  const cached=await cacheGet(cacheKey);
+  if(cached){
+    if(!speaking)return;
+    const btn=document.getElementById('playBtn');
+    btn.classList.add('active');btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
+    toast('💾 Cached audio');
+    playAudioQueue([...cached],()=>stopSpeech());
+    return;
+  }
   const chunks = chunkText(text);
   toast('🎙️ ശബ്ദം തയ്യാറാക്കുന്നു...');
   const btn=document.getElementById('playBtn');
@@ -501,6 +541,7 @@ async function playSarvam(text, speaker){
       audioData.push(...results);
       if(!speaking) return; // user cancelled
     }
+    await cacheSet(cacheKey, audioData);
     if(!speaking) return; // user cancelled while loading
     btn.innerHTML='⏹ <span>നിർത്തൂ</span>';
     playAudioQueue([...audioData], ()=>{
@@ -548,7 +589,7 @@ document.getElementById('playBtn').addEventListener('click',()=>{
   const speaker=document.getElementById('voiceSel').value;
   const sk = sarvamKey || localStorage.getItem('nk_sarvam_key') || '';
   if(sk){
-    playSarvam(text, speaker);
+    playSarvam(currentStory?.id||'unknown', text, speaker);
   } else {
     useBrowserTTS(text);
   }
