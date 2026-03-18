@@ -1,0 +1,52 @@
+name: Deploy കഥപ്പെട്ടി
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION=$(date -u +'%Y%m%d-%H%M%S')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Inject version into sw.js
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          sed -i "s/__VERSION__/$VERSION/g" sw.js
+          echo "sw.js updated with version $VERSION"
+
+      - name: Inject version into index.html
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          # Add a version meta tag for debugging
+          sed -i "s|</head>|<meta name=\"app-version\" content=\"$VERSION\"/>\n</head>|" index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
