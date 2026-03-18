@@ -455,8 +455,11 @@ function stopSpeech(){
 }
 
 function cleanTextForSpeech(raw){
-  return raw
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu,'')
+  let t = raw;
+  // /gu flag not supported on iOS 12 — wrap in try/catch
+  try { t = t.replace(/[\u{1F000}-\u{1FFFF}]/gu,''); } catch(e) {}
+  return t
+    .replace(/[\uD800-\uDFFF][\uD800-\uDFFF]/g,'') // emoji fallback (surrogate pairs)
     .replace(/[🌙✨💫🪔🌟❤️🤍▶️⏹]/g,'')
     .replace(/\.\.\./g,' ')
     .replace(/["""'']/g,'')
