@@ -6,7 +6,9 @@
 <title>കഥപ്പെട്ടി</title>
 <link rel="manifest" href="manifest.json"/>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
-<meta name="theme-color" content="#0a0a1a"/>
+<meta name="theme-color" content="#0d0a18"/>
+<link rel="apple-touch-icon" href="icon-512.svg"/>
+<link rel="icon" type="image/svg+xml" href="icon-192.svg"/>
 <style>
 :root{
   --bg:#0a0a1a;--bg2:#12122a;--bg3:#1a1a3a;
@@ -31,8 +33,8 @@ canvas#stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:n
 
 /* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 10px}
-.logo{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold);letter-spacing:.05em;line-height:1.2}
-.logo span{display:block;font-family:'Noto Serif Malayalam',serif;font-size:.85rem;color:var(--text2);font-weight:400;letter-spacing:.02em}
+.logo{display:flex;align-items:center;line-height:1}
+.logo svg{display:block}
 .hbtns{display:flex;gap:8px}
 .hbtn{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .hbtn:hover{border-color:var(--gold);color:var(--gold)}
@@ -129,7 +131,42 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
 <canvas id="stars"></canvas>
 <div id="app">
   <header>
-    <div class="logo">കഥപ്പെട്ടി<span>കേൾക്കാം വളരാം</span></div>
+    <div class="logo">
+      <svg width="120" height="52" viewBox="0 0 220 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Book left page -->
+        <path d="M18 32 Q18 22 34 20 Q62 15 100 20 L100 82 Q62 77 34 80 Q18 82 18 72Z" fill="var(--card2)"/>
+        <path d="M18 32 Q18 22 34 20 Q62 15 100 20 L100 82 Q62 77 34 80 Q18 82 18 72Z" fill="none" stroke="var(--border)" stroke-width="1.2"/>
+        <!-- Book right page -->
+        <path d="M182 32 Q182 22 166 20 Q138 15 100 20 L100 82 Q138 77 166 80 Q182 82 182 72Z" fill="var(--card)"/>
+        <path d="M182 32 Q182 22 166 20 Q138 15 100 20 L100 82 Q138 77 166 80 Q182 82 182 72Z" fill="none" stroke="var(--border)" stroke-width="1.2"/>
+        <!-- Spine -->
+        <path d="M97 20 L97 82" stroke="var(--gold)" stroke-width="2.5"/>
+        <!-- Stars from left page -->
+        <g transform="translate(54,34)">
+          <polygon points="0,-7 1.6,-2.3 6.7,-2.3 2.7,0.9 4.1,5.9 0,3 -4.1,5.9 -2.7,0.9 -6.7,-2.3 -1.6,-2.3" fill="var(--gold)"/>
+        </g>
+        <g transform="translate(72,22)">
+          <polygon points="0,-5 1.2,-1.6 4.8,-1.6 1.9,0.6 2.9,4.2 0,2.2 -2.9,4.2 -1.9,0.6 -4.8,-1.6 -1.2,-1.6" fill="var(--gold2)"/>
+        </g>
+        <circle cx="36" cy="42" r="2.8" fill="var(--gold)"/>
+        <circle cx="60" cy="56" r="2.2" fill="var(--gold2)"/>
+        <circle cx="38" cy="60" r="1.6" fill="var(--gold)" opacity="0.8"/>
+        <circle cx="76" cy="68" r="1.4" fill="var(--gold2)" opacity="0.8"/>
+        <circle cx="28" cy="55" r="1.2" fill="var(--gold)" opacity="0.6"/>
+        <!-- Sparkle lines on main star -->
+        <line x1="54" y1="27" x2="54" y2="22" stroke="var(--gold)" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+        <line x1="49" y1="32" x2="44" y2="32" stroke="var(--gold)" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+        <line x1="59" y1="32" x2="64" y2="32" stroke="var(--gold)" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+        <!-- Right page lines -->
+        <line x1="110" y1="32" x2="172" y2="30" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="110" y1="42" x2="172" y2="40" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="110" y1="52" x2="168" y2="50" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="110" y1="62" x2="172" y2="60" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="110" y1="72" x2="155" y2="70" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Title -->
+        <text x="100" y="97" text-anchor="middle" font-family="'Noto Serif Malayalam',serif" font-size="17" font-weight="700" fill="var(--gold)">കഥപ്പെട്ടി</text>
+      </svg>
+    </div>
     <div class="hbtns">
       <button class="hbtn" id="adminBtn" title="Admin">⚙️</button>
       <button class="hbtn" id="themeBtn" title="Toggle theme">☀️</button>
@@ -618,28 +655,54 @@ document.getElementById('genBtn').addEventListener('click', async()=>{
   const emojis={panchatantra:'🦁🐘🦊🐢🐍',jataka:'🐘🦌🦢🐒🐠',folk:'🏡🌺🌾🪔✨',animal:'🦋🦚🐿️🦜🦝',wisdom:'🪔💫🌟🎋🏺',kerala:'🌴🌺🌊🥥🎭'};
   const emojiSet=emojis[cat]||'✨🌟💫';
 
-  const prompt=`You are a Malayalam children's storyteller. Write an original, engaging bedtime story in Malayalam script for ${ageDesc}.
+  const nameExamples = {
+    panchatantra: 'അർജുനൻ, ദേവദത്തൻ, ശ്രീകുമാർ, ലക്ഷ്മി, കമലം, ഗോപൻ',
+    jataka: 'സിദ്ധാർത്ഥൻ, ആനന്ദൻ, മേഘവർണൻ, ശ്രദ്ധ, കരുണ',
+    folk: 'ചന്ദ്രൻ, മാധവൻ, ലീല, കല്യാണി, ഗോവിന്ദൻ, ദേവകി',
+    animal: 'കേശവൻ, ഗജരാജൻ, ശ്യാമ, കോമളം, ഭാസ്കരൻ',
+    wisdom: 'ഗുരുദേവൻ, ജ്ഞാനദൻ, രാഘവൻ, ശാരദ, ദേവൻ',
+    kerala: 'ഉണ്ണി, കുട്ടൻ, മോളി, ചേട്ടൻ, അമ്മ, അച്ഛൻ, മുത്തശ്ശി',
+  };
+  const names = nameExamples[cat] || nameExamples.kerala;
 
-Category: ${catLabelEn}
-Language: Malayalam (use authentic Malayalam script, not transliteration)
+  const prompt=`നീ ഒരു വിദഗ്ധ മലയാള കഥാകൃത്താണ്. കുട്ടികൾക്കുള്ള ഒരു ഉറക്കക്കഥ മലയാളത്തിൽ എഴുതുക.
 
-Write a long, immersive bedtime story of 1200-1500 words. Include:
-- A vivid scene-setting opening (at least 2 paragraphs)
-- Well-developed characters with names and personalities
-- Rich natural dialogue between characters
-- A problem or challenge that builds gradually across multiple scenes
-- Emotional moments, sensory details, and descriptive language
-- A satisfying resolution with a clear moral
-- Gentle, soothing pacing suitable for bedtime
+വിഭാഗം: ${catLabelEn}
+പ്രായം: ${ageDesc}
 
-Respond using EXACTLY this format with these exact marker lines, nothing else:
+━━━ കർശനമായ നിർദ്ദേശങ്ങൾ ━━━
 
-TITLE_ML: <story title in Malayalam>
+ഭാഷ:
+- ശുദ്ധ മലയാളം മാത്രം ഉപയോഗിക്കുക. ഇംഗ്ലീഷ് വാക്കുകൾ ഒഴിവാക്കുക.
+- അക്ഷരത്തെറ്റുകൾ ഒരിക്കലും പാടില്ല. ഓരോ വാക്കും ശ്രദ്ധിച്ച് എഴുതുക.
+- മലയാളം ലിപി മാത്രം — transliteration പാടില്ല.
+
+കഥാപാത്രങ്ങളുടെ പേരുകൾ:
+- കേരളീയ അല്ലെങ്കിൽ ഭാരതീയ പേരുകൾ മാത്രം ഉപയോഗിക്കുക.
+- ഉദാഹരണം: ${names}
+- "Kallan", "Hero", "King" തുടങ്ങിയ ഇംഗ്ലീഷ് അല്ലെങ്കിൽ അർത്ഥശൂന്യമായ പേരുകൾ പാടില്ല.
+
+കഥയുടെ ഘടന (1200-1500 വാക്കുകൾ):
+1. ആമുഖം — സ്ഥലവും കാലവും കഥാപാത്രങ്ങളെയും പരിചയപ്പെടുത്തുക (2 ഖണ്ഡികകൾ)
+2. പ്രശ്നം — ഒരു വെല്ലുവിളി അല്ലെങ്കിൽ ആഗ്രഹം (2 ഖണ്ഡികകൾ)
+3. യാത്ര — പ്രശ്നം പരിഹരിക്കാനുള്ള ശ്രമം, സഹായങ്ങൾ, തടസ്സങ്ങൾ (4 ഖണ്ഡികകൾ)
+4. പരിഹാരം — ജ്ഞാനം അല്ലെങ്കിൽ ദയ കൊണ്ട് പ്രശ്നം തീർക്കുക (2 ഖണ്ഡിക)
+5. ഉപസംഹാരം — സന്തോഷകരമായ അവസാനം, ഉറക്കത്തിലേക്ക് (1 ഖണ്ഡിക)
+
+ഉള്ളടക്കം:
+- യുക്തിസഹമായ കഥ — കഥാഗതി സ്വാഭാവികമായിരിക്കണം
+- കഥാപാത്രങ്ങൾ തമ്മിലുള്ള സ്വാഭാവിക സംഭാഷണം ഉൾപ്പെടുത്തുക
+- കേരളത്തിന്റെ പ്രകൃതി, ഭക്ഷണം, ജീവിതരീതി എന്നിവ സ്വാഭാവികമായി ഉൾക്കൊള്ളിക്കുക
+- കഥ പൂർണ്ണമായി അവസാനിക്കണം — ഒരിക്കലും പകുതിയിൽ നിർത്തരുത്
+
+ഇപ്പോൾ EXACTLY ഈ format-ൽ മാത്രം മറുപടി നൽകുക, മറ്റൊന്നും വേണ്ട:
+
+TITLE_ML: <കഥയുടെ പേര് മലയാളത്തിൽ>
 TITLE_EN: <story title in English>
 EMOJI: <one emoji from: ${emojiSet}>
-MORAL: <one sentence moral in Malayalam>
+MORAL: <ഒറ്റ വാക്യത്തിൽ കഥയുടെ സന്ദേശം മലയാളത്തിൽ>
 STORY:
-<full story text here, paragraphs separated by blank lines>`;
+<കഥ ഇവിടെ — ഖണ്ഡികകൾ തമ്മിൽ ഒരു ശൂന്യ വരി ഇടുക>`;
 
   try{
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
@@ -648,7 +711,7 @@ STORY:
       body:JSON.stringify({
         model:'llama-3.3-70b-versatile',
         messages:[{role:'user',content:prompt}],
-        temperature:.8, max_tokens:2600
+        temperature:.4, max_tokens:2600
       })
     });
     if(!res.ok){
@@ -656,6 +719,13 @@ STORY:
       throw new Error(err.error?.message||'API error '+res.status);
     }
     const data=await res.json();
+
+    // Check if story was cut off before finishing
+    const finishReason=data.choices[0].finish_reason;
+    if(finishReason==='length'){
+      throw new Error('കഥ പൂർണ്ണമായില്ല. വീണ്ടും ശ്രമിക്കൂ.');
+    }
+
     const raw=data.choices[0].message.content.trim();
 
     // Parse delimited plain text response

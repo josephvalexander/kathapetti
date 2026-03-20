@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0d0a18" rx="80"/>
+
+  <!-- Open book left page -->
+  <path d="M60 185 Q60 148 110 138 Q175 124 256 136 L256 368 Q175 354 110 362 Q60 370 60 334Z" fill="#1e1630"/>
+  <path d="M60 185 Q60 148 110 138 Q175 124 256 136 L256 368 Q175 354 110 362 Q60 370 60 334Z" fill="none" stroke="#4a3860" stroke-width="4"/>
+
+  <!-- Open book right page -->
+  <path d="M452 185 Q452 148 402 138 Q337 124 256 136 L256 368 Q337 354 402 362 Q452 370 452 334Z" fill="#180f28"/>
+  <path d="M452 185 Q452 148 402 138 Q337 124 256 136 L256 368 Q337 354 402 362 Q452 370 452 334Z" fill="none" stroke="#4a3860" stroke-width="4"/>
+
+  <!-- Spine -->
+  <path d="M248 136 L248 368" stroke="#d4a820" stroke-width="8"/>
+  <path d="M264 136 L264 368" stroke="#6a4810" stroke-width="3"/>
+
+  <!-- Book bottom cover -->
+  <path d="M62 358 Q175 374 256 364 Q337 374 450 358 L450 380 Q337 398 256 388 Q175 398 62 380Z" fill="#d4a820" opacity="0.25"/>
+
+  <!-- Big star -->
+  <g transform="translate(148,195)">
+    <polygon points="0,-40 9.4,-12.9 38.0,-12.9 15.6,4.9 23.5,33.8 0,17 -23.5,33.8 -15.6,4.9 -38.0,-12.9 -9.4,-12.9" fill="#fde68a"/>
+  </g>
+
+  <!-- Medium star -->
+  <g transform="translate(210,148)">
+    <polygon points="0,-26 6.1,-8.4 24.7,-8.4 10.1,3.2 15.3,22 0,11 -15.3,22 -10.1,3.2 -24.7,-8.4 -6.1,-8.4" fill="#fde68a" opacity="0.9"/>
+  </g>
+
+  <!-- Small stars / dots -->
+  <circle cx="92" cy="222" r="12" fill="#fde68a"/>
+  <circle cx="88" cy="222" r="4.5" fill="#fff" opacity="0.7"/>
+  <circle cx="165" cy="275" r="10" fill="#fde68a" opacity="0.9"/>
+  <circle cx="100" cy="295" r="8" fill="#fde68a" opacity="0.8"/>
+  <circle cx="200" cy="315" r="7" fill="#fde68a" opacity="0.75"/>
+  <circle cx="80" cy="340" r="6" fill="#fde68a" opacity="0.6"/>
+  <circle cx="220" cy="248" r="6" fill="#fde68a" opacity="0.7"/>
+  <circle cx="130" cy="345" r="5" fill="#fde68a" opacity="0.6"/>
+
+  <!-- Sparkle lines on big star -->
+  <line x1="148" y1="155" x2="148" y2="135" stroke="#fde68a" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+  <line x1="128" y1="175" x2="108" y2="175" stroke="#fde68a" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+  <line x1="168" y1="175" x2="188" y2="175" stroke="#fde68a" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+  <line x1="148" y1="198" x2="148" y2="218" stroke="#fde68a" stroke-width="4" opacity="0.4" stroke-linecap="round"/>
+  <line x1="131" y1="158" x2="116" y2="143" stroke="#fde68a" stroke-width="3.5" opacity="0.35" stroke-linecap="round"/>
+  <line x1="165" y1="158" x2="180" y2="143" stroke="#fde68a" stroke-width="3.5" opacity="0.35" stroke-linecap="round"/>
+
+  <!-- Right page lines -->
+  <line x1="284" y1="174" x2="430" y2="168" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="284" y1="204" x2="430" y2="198" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="284" y1="234" x2="430" y2="228" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="284" y1="264" x2="415" y2="258" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="284" y1="294" x2="430" y2="288" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="284" y1="324" x2="390" y2="318" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Malayalam ക letter watermark subtle -->
+  <text x="256" y="430" text-anchor="middle" font-family="serif" font-size="68" font-weight="700" fill="#fde68a">കഥ</text>
+</svg>

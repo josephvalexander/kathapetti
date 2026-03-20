@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full bleed background for maskable (no rounded corners — OS applies mask) -->
+  <rect width="512" height="512" fill="#0d0a18"/>
+
+  <!-- Scaled down content to stay within safe zone (80% = 410px, offset 51px each side) -->
+  <!-- Open book left page -->
+  <path d="M80 200 Q80 168 122 158 Q182 144 256 154 L256 358 Q182 346 122 353 Q80 358 80 326Z" fill="#1e1630"/>
+  <path d="M80 200 Q80 168 122 158 Q182 144 256 154 L256 358 Q182 346 122 353 Q80 358 80 326Z" fill="none" stroke="#4a3860" stroke-width="4"/>
+
+  <!-- Open book right page -->
+  <path d="M432 200 Q432 168 390 158 Q330 144 256 154 L256 358 Q330 346 390 353 Q432 358 432 326Z" fill="#180f28"/>
+  <path d="M432 200 Q432 168 390 158 Q330 144 256 154 L256 358 Q330 346 390 353 Q432 358 432 326Z" fill="none" stroke="#4a3860" stroke-width="4"/>
+
+  <!-- Spine -->
+  <path d="M249 154 L249 358" stroke="#d4a820" stroke-width="7"/>
+  <path d="M263 154 L263 358" stroke="#6a4810" stroke-width="2.5"/>
+
+  <!-- Bottom cover -->
+  <path d="M82 348 Q182 362 256 354 Q330 362 430 348 L430 368 Q330 385 256 376 Q182 385 82 368Z" fill="#d4a820" opacity="0.25"/>
+
+  <!-- Big star -->
+  <g transform="translate(158,208)">
+    <polygon points="0,-36 8.5,-11.6 34.2,-11.6 14.0,4.4 21.1,30.4 0,15.3 -21.1,30.4 -14.0,4.4 -34.2,-11.6 -8.5,-11.6" fill="#fde68a"/>
+  </g>
+
+  <!-- Medium star -->
+  <g transform="translate(212,164)">
+    <polygon points="0,-22 5.2,-7.1 21,-7.1 8.6,2.7 13,18.7 0,9.4 -13,18.7 -8.6,2.7 -21,-7.1 -5.2,-7.1" fill="#fde68a" opacity="0.9"/>
+  </g>
+
+  <!-- Dots -->
+  <circle cx="105" cy="235" r="10" fill="#fde68a"/>
+  <circle cx="102" cy="235" r="4" fill="#fff" opacity="0.7"/>
+  <circle cx="170" cy="278" r="9" fill="#fde68a" opacity="0.9"/>
+  <circle cx="108" cy="298" r="7" fill="#fde68a" opacity="0.8"/>
+  <circle cx="200" cy="318" r="6" fill="#fde68a" opacity="0.75"/>
+  <circle cx="96" cy="328" r="5" fill="#fde68a" opacity="0.6"/>
+  <circle cx="225" cy="255" r="5" fill="#fde68a" opacity="0.7"/>
+
+  <!-- Sparkles -->
+  <line x1="158" y1="172" x2="158" y2="154" stroke="#fde68a" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+  <line x1="140" y1="190" x2="122" y2="190" stroke="#fde68a" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+  <line x1="176" y1="190" x2="194" y2="190" stroke="#fde68a" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+  <line x1="142" y1="173" x2="128" y2="159" stroke="#fde68a" stroke-width="3.5" opacity="0.35" stroke-linecap="round"/>
+  <line x1="174" y1="173" x2="188" y2="159" stroke="#fde68a" stroke-width="3.5" opacity="0.35" stroke-linecap="round"/>
+
+  <!-- Right page lines -->
+  <line x1="276" y1="186" x2="415" y2="181" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="276" y1="214" x2="415" y2="209" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="276" y1="242" x2="415" y2="237" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="276" y1="270" x2="402" y2="265" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="276" y1="298" x2="415" y2="293" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+  <line x1="276" y1="326" x2="378" y2="321" stroke="#4a3870" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Title text -->
+  <text x="256" y="428" text-anchor="middle" font-family="serif" font-size="62" font-weight="700" fill="#fde68a">കഥ</text>
+</svg>

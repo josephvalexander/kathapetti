@@ -1,6 +1,6 @@
 // APP_VERSION: __VERSION__
 const CACHE = 'kathapetti-__VERSION__';
-const ASSETS = ['./','./index.html'];
+const ASSETS = ['./','./index.html','./icon-192.svg','./icon-512.svg','./icon-maskable.svg'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
