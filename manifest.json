@@ -9,6 +9,10 @@
   "orientation": "portrait-primary",
   "categories": ["education", "kids", "entertainment"],
   "lang": "ml",
+  "dir": "ltr",
+  "scope": "./",
+  "prefer_related_applications": false,
+  "screenshots": [],
   "icons": [
     {
       "src": "icon-192.svg",

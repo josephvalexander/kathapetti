@@ -6,7 +6,8 @@
 <title>കഥപ്പെട്ടി</title>
 <link rel="manifest" href="manifest.json"/>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
-<meta name="theme-color" content="#0d0a18"/>
+<meta name="theme-color" content="#0d0a18" media="(prefers-color-scheme: dark)"/>
+<meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)"/>
 <link rel="apple-touch-icon" href="icon-512.svg"/>
 <link rel="icon" type="image/svg+xml" href="icon-192.svg"/>
 <style>
@@ -132,39 +133,48 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
 <div id="app">
   <header>
     <div class="logo">
-      <svg width="120" height="52" viewBox="0 0 220 100" xmlns="http://www.w3.org/2000/svg">
-        <!-- Book left page -->
-        <path d="M18 32 Q18 22 34 20 Q62 15 100 20 L100 82 Q62 77 34 80 Q18 82 18 72Z" fill="var(--card2)"/>
-        <path d="M18 32 Q18 22 34 20 Q62 15 100 20 L100 82 Q62 77 34 80 Q18 82 18 72Z" fill="none" stroke="var(--border)" stroke-width="1.2"/>
-        <!-- Book right page -->
-        <path d="M182 32 Q182 22 166 20 Q138 15 100 20 L100 82 Q138 77 166 80 Q182 82 182 72Z" fill="var(--card)"/>
-        <path d="M182 32 Q182 22 166 20 Q138 15 100 20 L100 82 Q138 77 166 80 Q182 82 182 72Z" fill="none" stroke="var(--border)" stroke-width="1.2"/>
-        <!-- Spine -->
-        <path d="M97 20 L97 82" stroke="var(--gold)" stroke-width="2.5"/>
-        <!-- Stars from left page -->
-        <g transform="translate(54,34)">
-          <polygon points="0,-7 1.6,-2.3 6.7,-2.3 2.7,0.9 4.1,5.9 0,3 -4.1,5.9 -2.7,0.9 -6.7,-2.3 -1.6,-2.3" fill="var(--gold)"/>
-        </g>
-        <g transform="translate(72,22)">
-          <polygon points="0,-5 1.2,-1.6 4.8,-1.6 1.9,0.6 2.9,4.2 0,2.2 -2.9,4.2 -1.9,0.6 -4.8,-1.6 -1.2,-1.6" fill="var(--gold2)"/>
-        </g>
-        <circle cx="36" cy="42" r="2.8" fill="var(--gold)"/>
-        <circle cx="60" cy="56" r="2.2" fill="var(--gold2)"/>
-        <circle cx="38" cy="60" r="1.6" fill="var(--gold)" opacity="0.8"/>
-        <circle cx="76" cy="68" r="1.4" fill="var(--gold2)" opacity="0.8"/>
-        <circle cx="28" cy="55" r="1.2" fill="var(--gold)" opacity="0.6"/>
-        <!-- Sparkle lines on main star -->
-        <line x1="54" y1="27" x2="54" y2="22" stroke="var(--gold)" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
-        <line x1="49" y1="32" x2="44" y2="32" stroke="var(--gold)" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
-        <line x1="59" y1="32" x2="64" y2="32" stroke="var(--gold)" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
-        <!-- Right page lines -->
-        <line x1="110" y1="32" x2="172" y2="30" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="110" y1="42" x2="172" y2="40" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="110" y1="52" x2="168" y2="50" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="110" y1="62" x2="172" y2="60" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="110" y1="72" x2="155" y2="70" stroke="var(--border)" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- Title -->
-        <text x="100" y="97" text-anchor="middle" font-family="'Noto Serif Malayalam',serif" font-size="17" font-weight="700" fill="var(--gold)">കഥപ്പെട്ടി</text>
+      <svg width="130" height="52" viewBox="0 0 260 104" xmlns="http://www.w3.org/2000/svg">
+        <!-- Stars -->
+        <circle cx="8" cy="10" r="1.2" fill="var(--gold)" opacity="0.6"/>
+        <circle cx="22" cy="4" r="1" fill="var(--gold)" opacity="0.5"/>
+        <circle cx="38" cy="12" r="1.1" fill="var(--gold)" opacity="0.4"/>
+        <!-- Moon -->
+        <circle cx="28" cy="34" r="18" fill="var(--gold)"/>
+        <circle cx="35" cy="27" r="13" fill="var(--bg)"/>
+        <!-- Branch -->
+        <path d="M0 72 Q50 68 104 70 Q140 71 180 68" stroke="var(--text2)" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.5"/>
+        <path d="M55 70 Q53 60 50 52" stroke="var(--text2)" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.4"/>
+        <!-- Owl body -->
+        <ellipse cx="80" cy="58" rx="14" ry="16" fill="var(--text2)" opacity="0.7"/>
+        <!-- Owl head -->
+        <circle cx="80" cy="43" r="13" fill="var(--text2)" opacity="0.8"/>
+        <!-- Ear tufts -->
+        <polygon points="74,33 70,24 77,32" fill="var(--text2)" opacity="0.8"/>
+        <polygon points="86,33 90,24 83,32" fill="var(--text2)" opacity="0.8"/>
+        <!-- Eyes -->
+        <circle cx="74" cy="43" r="5.5" fill="var(--gold)"/>
+        <circle cx="86" cy="43" r="5.5" fill="var(--gold)"/>
+        <circle cx="74" cy="43" r="3.5" fill="var(--bg)"/>
+        <circle cx="86" cy="43" r="3.5" fill="var(--bg)"/>
+        <circle cx="74.8" cy="42" r="1.2" fill="var(--gold)"/>
+        <circle cx="86.8" cy="42" r="1.2" fill="var(--gold)"/>
+        <!-- Beak -->
+        <polygon points="80,49 77,53 83,53" fill="var(--gold)" opacity="0.9"/>
+        <!-- Wings -->
+        <path d="M66 55 Q58 62 60 70 Q68 66 80 68" fill="var(--bg2)" opacity="0.6"/>
+        <path d="M94 55 Q102 62 100 70 Q92 66 80 68" fill="var(--bg)" opacity="0.5"/>
+        <!-- Feet -->
+        <line x1="75" y1="74" x2="70" y2="80" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+        <line x1="78" y1="74" x2="76" y2="81" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+        <line x1="85" y1="74" x2="84" y2="81" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+        <line x1="88" y1="74" x2="93" y2="80" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+        <!-- App name -->
+        <text x="168" y="40" text-anchor="middle" font-family="'Noto Serif Malayalam',serif" font-size="20" font-weight="700" fill="var(--gold)">കഥപ്പെട്ടി</text>
+        <!-- Divider -->
+        <line x1="118" y1="48" x2="218" y2="48" stroke="var(--gold)" stroke-width="0.8" opacity="0.4"/>
+        <circle cx="168" cy="48" r="2" fill="var(--gold)" opacity="0.5"/>
+        <!-- Tagline -->
+        <text x="168" y="62" text-anchor="middle" font-family="'Noto Serif Malayalam',serif" font-size="10" fill="var(--text2)">കേൾക്കാം വളരാം</text>
       </svg>
     </div>
     <div class="hbtns">
@@ -785,6 +795,12 @@ let light=localStorage.getItem('nk_theme')==='light';
 function applyTheme(){
   document.documentElement.classList.toggle('light',light);
   document.getElementById('themeBtn').textContent=light?'🌙':'☀️';
+  // Update theme-color for browser chrome
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.remove());
+  const tc=document.createElement('meta');
+  tc.name='theme-color';
+  tc.content=light?'#f5f0e8':'#0d0a18';
+  document.head.appendChild(tc);
 }
 document.getElementById('themeBtn').addEventListener('click',()=>{
   light=!light; localStorage.setItem('nk_theme',light?'light':'dark'); applyTheme();
