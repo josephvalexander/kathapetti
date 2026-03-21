@@ -6,7 +6,6 @@
 <title>കഥപ്പെട്ടി</title>
 <link rel="manifest" href="manifest.json"/>
 <script src="builtin-stories.js"></script>
-<script src="wikisource-loader.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
 <meta name="theme-color" content="#0d0a18" media="(prefers-color-scheme: dark)"/>
 <meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)"/>
@@ -996,10 +995,9 @@ renderLibraryStories();
 renderAiStories();
 updateApiWrap();
 
-// Load Wikisource stories asynchronously
+// Load Wikisource stories asynchronously using the API fetcher in builtin-stories.js
 (async () => {
   const wsEl = document.getElementById('libraryStories');
-  // Show subtle loading badge on library panel
   const badge = document.createElement('div');
   badge.id = 'ws-loading';
   badge.style.cssText = 'text-align:center;padding:8px;font-size:.8rem;opacity:.6;';
@@ -1007,11 +1005,13 @@ updateApiWrap();
   wsEl.prepend(badge);
 
   try {
-    wikisourceStories = await loadWikisourceStories();
+    wikisourceStories = await fetchAllWikisourceStories();
     badge.remove();
     if (wikisourceStories.length > 0) {
-      renderLibraryStories(); // re-render with new stories merged in
+      renderLibraryStories();
       console.log('[App] Wikisource stories loaded:', wikisourceStories.length);
+    } else {
+      console.log('[App] No Wikisource stories returned (offline or API unavailable)');
     }
   } catch(e) {
     badge.remove();
