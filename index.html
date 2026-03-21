@@ -883,7 +883,30 @@ document.getElementById('admSave').addEventListener('click',()=>{
 });
 
 // ── SW ─────────────────────────────────────────────────────────────────────
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // Check for updates every time the app is focused
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      newSW.addEventListener('statechange', () => {
+        if(newSW.state === 'installed' && navigator.serviceWorker.controller){
+          // New version available — show toast and reload
+          const t = document.createElement('div');
+          t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--gold);color:#0a0a1a;border-radius:10px;padding:12px 20px;font-size:.88rem;z-index:9999;cursor:pointer;font-family:"Noto Serif Malayalam",serif;white-space:nowrap;font-weight:600';
+          t.textContent='🔄 പുതിയ പതിപ്പ് — ടാപ്പ് ചെയ്ത് അപ്ഡേറ്റ് ചെയ്യൂ';
+          t.onclick = () => { newSW.postMessage('skipWaiting'); window.location.reload(); };
+          document.body.appendChild(t);
+        }
+      });
+    });
+    // Check for update immediately on load
+    reg.update();
+  });
+  // When SW controller changes (new SW took over), reload the page
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────
 renderCatBar();
