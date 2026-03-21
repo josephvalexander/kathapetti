@@ -60,66 +60,109 @@ const BUILTIN_STORIES = [
 ];
 
 // ── Wikisource Live Fetch ─────────────────────────────────────────────────
+// Strategy: fetch subpages of known parent pages using apprefix (allpages API).
+// Each entry is a parent page on ml.wikisource.org that has subpages with story text.
+// Fallback: fetch the parent page itself if no subpages found.
 
 const WIKISOURCE_API = 'https://ml.wikisource.org/w/api.php';
 
-const WIKISOURCE_STORY_PAGES = [
-  { title: 'ഈസോപ്പ് കഥകൾ', cat: 'folk' },
-  { title: 'പഞ്ചതന്ത്രം', cat: 'panchatantra' },
+// Known pages/prefixes on ml.wikisource.org with children or direct story text.
+// prefix = the apprefix value for allpages (subpage listing)
+// title  = direct page title to fetch if prefix yields nothing
+const WIKISOURCE_SOURCES = [
+  { prefix: 'ഈസോപ്പ് കഥകൾ/', title: 'ഈസോപ്പ് കഥകൾ', cat: 'folk',        emoji: '🐺' },
+  { prefix: 'പഞ്ചതന്ത്രം/',    title: 'പഞ്ചതന്ത്രം',    cat: 'panchatantra', emoji: '🦁' },
+  { prefix: 'ജാതക കഥകൾ/',     title: 'ജാതക കഥകൾ',     cat: 'jataka',       emoji: '🐘' },
 ];
 
-async function fetchWikisourceCategory(categoryName, cat, limit = 15) {
-  try {
-    const url = `${WIKISOURCE_API}?action=query&list=categorymembers` +
-      `&cmtitle=Category:${encodeURIComponent(categoryName)}&cmlimit=${limit}` +
-      `&cmtype=page&cmnamespace=0&format=json&origin=*`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const pages = data.query?.categorymembers || [];
+// Fetch a single page's plain text via MediaWiki extracts API
+async function fetchWikiPageText(title) {
+  const url = `${WIKISOURCE_API}?action=query&prop=extracts&explaintext=true` +
+    `&titles=${encodeURIComponent(title)}&format=json&origin=*`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const pg = Object.values(data.query?.pages || {})[0];
+  if (!pg || pg.missing !== undefined) return null;
+  const text = pg.extract?.trim() || '';
+  return text.length > 150 ? text : null;
+}
 
-    const stories = [];
-    for (const page of pages.slice(0, 8)) {
-      try {
-        const textUrl = `${WIKISOURCE_API}?action=query&prop=extracts` +
-          `&explaintext=true&titles=${encodeURIComponent(page.title)}` +
-          `&format=json&origin=*`;
-        const textRes = await fetch(textUrl);
-        if (!textRes.ok) continue;
-        const textData = await textRes.json();
-        const pg = Object.values(textData.query?.pages || {})[0];
-        if (!pg?.extract || pg.extract.trim().length < 200) continue;
-
-        const text = pg.extract.trim().substring(0, 2500);
-        stories.push({
-          id: `ws_${page.pageid}`,
-          source: 'wikisource',
-          cat,
-          age: '5-7',
-          emoji: '📜',
-          dur: Math.max(3, Math.round(text.split(' ').length / 80)),
-          title: page.title,
-          titleEn: page.title,
-          author: 'വിക്കിഗ്രന്ഥശാല',
-          license: 'Public Domain',
-          wsUrl: `https://ml.wikisource.org/wiki/${encodeURIComponent(page.title)}`,
-          text,
-        });
-      } catch(e) { /* skip */ }
-    }
-    return stories;
-  } catch(e) {
-    console.warn('Wikisource fetch error:', e);
-    return [];
-  }
+// Fetch list of subpages using allpages with a prefix
+async function fetchWikiSubpages(prefix, limit = 12) {
+  const url = `${WIKISOURCE_API}?action=query&list=allpages` +
+    `&apprefix=${encodeURIComponent(prefix)}&aplimit=${limit}` +
+    `&apnamespace=0&format=json&origin=*`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.query?.allpages || [];
 }
 
 async function fetchAllWikisourceStories() {
   const all = [];
-  for (const { title, cat } of WIKISOURCE_STORY_PAGES) {
-    const stories = await fetchWikisourceCategory(title, cat);
-    all.push(...stories);
+
+  for (const src of WIKISOURCE_SOURCES) {
+    try {
+      // Try subpages first
+      let pages = await fetchWikiSubpages(src.prefix);
+
+      // If no subpages, try the parent page itself
+      if (pages.length === 0) {
+        const text = await fetchWikiPageText(src.title);
+        if (text) {
+          // Parent page may contain multiple stories separated by section headings.
+          // Split on == headings and treat each section as a story.
+          const sections = text.split(/\n={2,3}[^=]+={2,3}\n/).filter(s => s.trim().length > 150);
+          const headings = [...text.matchAll(/\n(={2,3})([^=]+)\1\n/g)].map(m => m[2].trim());
+          sections.forEach((section, i) => {
+            const storyTitle = headings[i] || `${src.title} — ${i + 1}`;
+            all.push({
+              id: `ws_${btoa(unescape(encodeURIComponent(storyTitle))).slice(0,12)}`,
+              source: 'wikisource',
+              cat: src.cat,
+              age: '5-7',
+              emoji: src.emoji,
+              dur: Math.max(3, Math.round(section.split(/\s+/).length / 80)),
+              title: storyTitle,
+              titleEn: storyTitle,
+              author: 'വിക്കിഗ്രന്ഥശാല',
+              license: 'Public Domain',
+              wsUrl: `https://ml.wikisource.org/wiki/${encodeURIComponent(src.title)}`,
+              text: section.trim().substring(0, 3000),
+            });
+          });
+        }
+        continue;
+      }
+
+      // Fetch text for each subpage (max 10 per source)
+      for (const page of pages.slice(0, 10)) {
+        try {
+          const text = await fetchWikiPageText(page.title);
+          if (!text) continue;
+          all.push({
+            id: `ws_${page.pageid}`,
+            source: 'wikisource',
+            cat: src.cat,
+            age: '5-7',
+            emoji: src.emoji,
+            dur: Math.max(3, Math.round(text.split(/\s+/).length / 80)),
+            title: page.title.replace(src.prefix, '').replace(src.title + '/', '') || page.title,
+            titleEn: page.title,
+            author: 'വിക്കിഗ്രന്ഥശാല',
+            license: 'Public Domain',
+            wsUrl: `https://ml.wikisource.org/wiki/${encodeURIComponent(page.title)}`,
+            text: text.substring(0, 3000),
+          });
+        } catch(e) { /* skip individual page errors */ }
+      }
+    } catch(e) {
+      console.warn('[Wikisource] Failed for', src.title, e.message);
+    }
   }
+
+  console.log(`[Wikisource] Loaded ${all.length} stories`);
   return all;
 }
 
