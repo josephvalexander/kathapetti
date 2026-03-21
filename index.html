@@ -6,6 +6,7 @@
 <title>കഥപ്പെട്ടി</title>
 <link rel="manifest" href="manifest.json"/>
 <script src="builtin-stories.js"></script>
+<script src="wikisource-loader.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
 <meta name="theme-color" content="#0d0a18" media="(prefers-color-scheme: dark)"/>
 <meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)"/>
@@ -206,9 +207,9 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
     <!-- Library panel -->
     <div class="mode-panel active" id="panel-library">
       <div class="attr-box">
-        <strong>📖 StoryWeaver — Pratham Books</strong>
-        ഈ കഥകൾ <a href="https://storyweaver.org.in" target="_blank">StoryWeaver</a> (Pratham Books) ൽ നിന്ന് ശേഖരിച്ചതാണ്.
-        License: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>
+        <strong>📖 മലയാളം വിക്കിഗ്രന്ഥശാല</strong>
+        ഈ കഥകൾ <a href="https://ml.wikisource.org" target="_blank">മലയാളം വിക്കിഗ്രന്ഥശാല</a> (Wikimedia Foundation) ൽ നിന്ന് ശേഖരിച്ചതാണ്.
+        ഉള്ളടക്കം Public Domain / <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
       </div>
       <div id="libraryStories"></div>
     </div>
@@ -411,7 +412,7 @@ function attachCardEvents(container){
       if(e.target.closest('.sc-fav'))return;
       const id=card.dataset.id;
       // Look in AI stories first, then builtin
-      const s=stories.find(s=>s.id===id) || BUILTIN_STORIES.find(s=>s.id===id);
+      const s=stories.find(s=>s.id===id) || BUILTIN_STORIES.find(s=>s.id===id) || wikisourceStories.find(s=>s.id===id);
       if(s) openReader(s);
     });
   });
@@ -428,10 +429,15 @@ function attachCardEvents(container){
 
 // ── Render tabs ────────────────────────────────────────────────────────────
 let activeMode = 'library';
+let wikisourceStories = []; // populated async on init
+
+function allLibraryStories() {
+  return [...(BUILTIN_STORIES || []), ...wikisourceStories];
+}
 
 function renderLibraryStories(){
   const el = document.getElementById('libraryStories');
-  let list = (BUILTIN_STORIES || []).filter(s =>
+  let list = allLibraryStories().filter(s =>
     (activeCat === 'all' || s.cat === activeCat)
   );
   if(!list.length){
@@ -468,7 +474,7 @@ function renderHomeStories(){
 
 function renderFavStories(){
   const el=document.getElementById('favStories');
-  const allStories=[...(BUILTIN_STORIES||[]),...stories];
+  const allStories=[...(BUILTIN_STORIES||[]),...wikisourceStories,...stories];
   const list=allStories.filter(s=>favs.includes(s.id));
   if(!list.length){el.innerHTML=`<div class="empty">❤️<br>ഒരു കഥ ഹൃദയത്തോട് ചേർക്കൂ!</div>`;return;}
   const div=document.createElement('div'); div.className='story-grid';
@@ -478,7 +484,7 @@ function renderFavStories(){
 
 function renderHistStories(){
   const el=document.getElementById('histStories');
-  const allStories=[...(BUILTIN_STORIES||[]),...stories];
+  const allStories=[...(BUILTIN_STORIES||[]),...wikisourceStories,...stories];
   const list=allStories.filter(s=>hist.includes(s.id));
   if(!list.length){el.innerHTML=`<div class="empty">📖<br>ഇനിയും ഒരു കഥ വായിക്കൂ!</div>`;return;}
   const div=document.createElement('div'); div.className='story-grid';
@@ -492,13 +498,13 @@ function openReader(s){
   if(!hist.includes(s.id)){hist.push(s.id); save();}
   document.getElementById('readerTitle').textContent=s.title;
 
-  // Build body with optional attribution footer
+  // Build body with optional attribution footer for Wikisource stories
   let bodyHtml = s.text.split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
-  if(s.source==='storyweaver'){
+  if(s.source==='wikisource'){
+    const wsLink = s.wsUrl || 'https://ml.wikisource.org';
     bodyHtml += `<div style="margin-top:24px;padding:12px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--gold);font-size:.78rem;color:var(--text2);line-height:1.8">
-      ✍️ <strong style="color:var(--text)">ലേഖകൻ:</strong> ${s.author}<br>
-      📖 <strong style="color:var(--text)">ഉറവിടം:</strong> <a href="${s.swUrl}" target="_blank" style="color:var(--gold)">StoryWeaver — Pratham Books</a><br>
-      ⚖️ <strong style="color:var(--text)">License:</strong> <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:var(--gold)">CC BY 4.0</a>
+      ✍️ <strong style="color:var(--text)">ഉറവിടം:</strong> <a href="${wsLink}" target="_blank" style="color:var(--gold)">മലയാളം വിക്കിഗ്രന്ഥശാല</a> (Wikimedia Foundation)<br>
+      ⚖️ <strong style="color:var(--text)">License:</strong> Public Domain / <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" style="color:var(--gold)">CC BY-SA 4.0</a>
     </div>`;
   }
   document.getElementById('readerBody').innerHTML=bodyHtml;
@@ -989,6 +995,29 @@ initGenCat();
 renderLibraryStories();
 renderAiStories();
 updateApiWrap();
+
+// Load Wikisource stories asynchronously
+(async () => {
+  const wsEl = document.getElementById('libraryStories');
+  // Show subtle loading badge on library panel
+  const badge = document.createElement('div');
+  badge.id = 'ws-loading';
+  badge.style.cssText = 'text-align:center;padding:8px;font-size:.8rem;opacity:.6;';
+  badge.textContent = '📡 വിക്കിഗ്രന്ഥശാലയിൽ നിന്ന് കഥകൾ ലോഡ് ചെയ്യുന്നു…';
+  wsEl.prepend(badge);
+
+  try {
+    wikisourceStories = await loadWikisourceStories();
+    badge.remove();
+    if (wikisourceStories.length > 0) {
+      renderLibraryStories(); // re-render with new stories merged in
+      console.log('[App] Wikisource stories loaded:', wikisourceStories.length);
+    }
+  } catch(e) {
+    badge.remove();
+    console.warn('[App] Wikisource load failed:', e);
+  }
+})();
 </script>
 </body>
 </html>
