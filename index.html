@@ -199,10 +199,22 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
           <option value="7-9">7–9 വയസ്സ്</option>
         </select>
       </div>
+      <div class="gen-row" style="margin-bottom:4px">
+        <select id="genEngine" style="flex:1">
+          <option value="groq">⚡ Groq — Llama 3.3 (സൗജന്യം, വേഗം)</option>
+          <option value="gemini">🌟 Gemini 2.5 Flash (മികച്ച നിലവാരം)</option>
+        </select>
+      </div>
       <button class="btn-gen" id="genBtn">🌟 കഥ ഉണ്ടാക്കൂ</button>
       <div class="api-wrap" id="apiWrap">
-        <label>Groq API Key — for story generation (<a href="https://console.groq.com" target="_blank" style="color:var(--gold)">groq.com</a>, free)</label>
-        <input type="password" id="apiKeyInput" placeholder="gsk_..."/>
+        <div id="groqKeyWrap">
+          <label>Groq API Key — <a href="https://console.groq.com" target="_blank" style="color:var(--gold)">console.groq.com</a> (free)</label>
+          <input type="password" id="apiKeyInput" placeholder="gsk_..."/>
+        </div>
+        <div id="geminiKeyWrap" style="display:none;margin-top:8px">
+          <label>Gemini API Key — <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold)">aistudio.google.com</a> (free)</label>
+          <input type="password" id="geminiKeyInput" placeholder="AIza..."/>
+        </div>
       </div>
     </div>
 
@@ -256,9 +268,11 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-box">
     <h3>⚙️ API Keys</h3>
-    <label>Groq API Key (for story generation)</label>
+    <label>Groq API Key (⚡ Llama 3.3 — സൗജന്യം)</label>
     <input type="password" id="admKey" placeholder="gsk_..."/>
-    <label style="margin-top:14px">Sarvam API Key (for voice — sarvam.ai)</label>
+    <label style="margin-top:12px">Gemini API Key (🌟 Gemini 2.5 Flash — മികച്ച നിലവാരം)</label>
+    <input type="password" id="admGeminiKey" placeholder="AIza..."/>
+    <label style="margin-top:12px">Sarvam API Key (🎙️ ശബ്ദം — sarvam.ai)</label>
     <input type="password" id="admSarvamKey" placeholder="sarvam_..."/>
     <div class="adm-btns">
       <button class="adm-cancel" id="admCancel">Cancel</button>
@@ -275,6 +289,7 @@ let favs    = JSON.parse(localStorage.getItem('nk_favs')    || '[]');
 let hist    = JSON.parse(localStorage.getItem('nk_hist')    || '[]');
 let apiKey  = localStorage.getItem('nk_key') || '';
 let sarvamKey = localStorage.getItem('nk_sarvam_key') || '';
+let geminiKey = localStorage.getItem('nk_gemini_key') || '';
 let activeCat = 'all';
 let activeTab = 'home';
 let currentStory = null;
@@ -647,119 +662,157 @@ document.getElementById('playBtn').addEventListener('click',()=>{
 });
 
 // ── AI Generation ──────────────────────────────────────────────────────────
+async function callGroq(key, systemPrompt, prompt){
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({
+      model:'llama-3.3-70b-versatile',
+      messages:[{role:'system',content:systemPrompt},{role:'user',content:prompt}],
+      temperature:.35, max_tokens:2600
+    })
+  });
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||'Groq error '+res.status);}
+  const data=await res.json();
+  if(data.choices[0].finish_reason==='length') throw new Error('കഥ പൂർണ്ണമായില്ല. വീണ്ടും ശ്രമിക്കൂ.');
+  return data.choices[0].message.content.trim();
+}
+
+async function callGemini(key, systemPrompt, prompt){
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:systemPrompt}]},
+      contents:[{role:'user',parts:[{text:prompt}]}],
+      generationConfig:{
+        temperature:0.7,
+        maxOutputTokens:3000,
+        responseMimeType:'text/plain',
+      },
+      // Enable thinking for deeper, more coherent Malayalam output
+      thinkingConfig:{thinkingBudget:8000}
+    })
+  });
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||'Gemini error '+res.status);}
+  const data=await res.json();
+  if(!data.candidates?.[0]){throw new Error('Gemini: മറുപടി ലഭിച്ചില്ല.');}
+  const reason=data.candidates[0].finishReason;
+  if(reason==='MAX_TOKENS') throw new Error('കഥ പൂർണ്ണമായില്ല. വീണ്ടും ശ്രമിക്കൂ.');
+  return data.candidates[0].content.parts.map(p=>p.text||'').join('').trim();
+}
+
 document.getElementById('genBtn').addEventListener('click', async()=>{
-  const key=document.getElementById('apiKeyInput').value.trim() || getKey();
-  if(!key){toast('⚠️ Groq API key ആവശ്യമാണ്'); document.getElementById('apiKeyInput').focus(); return;}
-  apiKey=key; localStorage.setItem('nk_key',key);
+  const engine=document.getElementById('genEngine').value;
+  let key='';
+  if(engine==='gemini'){
+    key=document.getElementById('geminiKeyInput').value.trim()||geminiKey||localStorage.getItem('nk_gemini_key')||'';
+    if(!key){toast('⚠️ Gemini API key ആവശ്യമാണ്');document.getElementById('geminiKeyInput').focus();return;}
+    geminiKey=key; localStorage.setItem('nk_gemini_key',key);
+  } else {
+    key=document.getElementById('apiKeyInput').value.trim()||apiKey||localStorage.getItem('nk_key')||'';
+    if(!key){toast('⚠️ Groq API key ആവശ്യമാണ്');document.getElementById('apiKeyInput').focus();return;}
+    apiKey=key; localStorage.setItem('nk_key',key);
+  }
 
   const cat=document.getElementById('genCat').value;
   const age=document.getElementById('genAge').value;
-  const catLabel=CATS.find(c=>c.id===cat)?.label||cat;
-  const catLabelEn=({panchatantra:'Panchatantra',jataka:'Jataka',folk:'Folk tale',animal:'Animal tale',wisdom:'Wisdom tale',kerala:'Kerala story'})[cat]||cat;
-  const ageDesc=age==='3-5'?'very young children (3-5), simple words':age==='5-7'?'children (5-7), moderate complexity':'older children (7-9), richer vocabulary';
 
   const btn=document.getElementById('genBtn');
-  btn.disabled=true; btn.textContent='🌙 ഉണ്ടാക്കുന്നു...';
+  btn.disabled=true;
+  btn.textContent=engine==='gemini'?'🌟 Gemini ചിന്തിക്കുന്നു...':'🌙 ഉണ്ടാക്കുന്നു...';
   document.getElementById('homeStories').innerHTML='<div class="loader"></div>';
 
   const emojis={panchatantra:'🦁🐘🦊🐢🐍',jataka:'🐘🦌🦢🐒🐠',folk:'🏡🌺🌾🪔✨',animal:'🦋🦚🐿️🦜🦝',wisdom:'🪔💫🌟🎋🏺',kerala:'🌴🌺🌊🥥🎭'};
   const emojiSet=emojis[cat]||'✨🌟💫';
 
-  const nameExamples = {
-    panchatantra: 'അർജുനൻ, ദേവദത്തൻ, ശ്രീകുമാർ, ലക്ഷ്മി, കമലം, ഗോപൻ',
-    jataka: 'സിദ്ധാർത്ഥൻ, ആനന്ദൻ, മേഘവർണൻ, ശ്രദ്ധ, കരുണ',
-    folk: 'ചന്ദ്രൻ, മാധവൻ, ലീല, കല്യാണി, ഗോവിന്ദൻ, ദേവകി',
-    animal: 'കേശവൻ, ഗജരാജൻ, ശ്യാമ, കോമളം, ഭാസ്കരൻ',
-    wisdom: 'ഗുരുദേവൻ, ജ്ഞാനദൻ, രാഘവൻ, ശാരദ, ദേവൻ',
-    kerala: 'ഉണ്ണി, കുട്ടൻ, മോളി, ചേട്ടൻ, അമ്മ, അച്ഛൻ, മുത്തശ്ശി',
+  const nameExamples={
+    panchatantra:'അർജുനൻ, ദേവദത്തൻ, ലക്ഷ്മി, ഗോപൻ, കമലം',
+    jataka:'സിദ്ധൻ, ആനന്ദൻ, മേഘവർണൻ, കരുണ, ശ്രദ്ധ',
+    folk:'ചന്ദ്രൻ, കല്യാണി, ഗോവിന്ദൻ, ദേവകി, മാധവൻ',
+    animal:'ഗജരാജൻ, ശ്യാമ, കോമളം, ഭാസ്കരൻ, കേശവൻ',
+    wisdom:'ഗുരുദേവൻ, രാഘവൻ, ശാരദ, ജ്ഞാനദൻ, ദേവൻ',
+    kerala:'ഉണ്ണി, കുട്ടൻ, മോളി, അമ്മ, മുത്തശ്ശി, ഗോപൻ',
   };
-  const names = nameExamples[cat] || nameExamples.kerala;
+  const names=nameExamples[cat]||nameExamples.kerala;
 
-  const prompt=`നീ ഒരു വിദഗ്ധ മലയാള കഥാകൃത്താണ്. കുട്ടികൾക്കുള്ള ഒരു ഉറക്കക്കഥ മലയാളത്തിൽ എഴുതുക.
+  const catContext={
+    panchatantra:'പഞ്ചതന്ത്രം — മൃഗ കഥാപാത്രങ്ങൾ, ജ്ഞാനം പഠിപ്പിക്കുന്ന നൈതിക കഥകൾ.',
+    jataka:'ജാതക കഥകൾ — ബുദ്ധന്റെ പൂർവജന്മ കഥകൾ. ത്യാഗം, കരുണ, ധർമ്മം.',
+    folk:'കേരള നാടോടി കഥകൾ — ഗ്രാമജീവിതം, ക്ഷേത്രങ്ങൾ, കൃഷി, ഉത്സവങ്ങൾ.',
+    animal:'മൃഗ കഥകൾ — കാടും നാടും. സ്നേഹം, സൗഹൃദം, സഹകരണം.',
+    wisdom:'ജ്ഞാന കഥകൾ — ഗുരു-ശിഷ്യ ബന്ധം, ജീവിതതത്ത്വങ്ങൾ.',
+    kerala:'കേരള കഥകൾ — ഓണം, വിഷു, നാടൻ ജീവിതം, തറവാട്, കായൽ.',
+  };
 
-വിഭാഗം: ${catLabelEn}
-പ്രായം: ${ageDesc}
+  const ageStyle={
+    '3-5':'ലളിത വാക്കുകൾ. ഒരു വാക്യം — ഒരു ആശയം. ആവർത്തന ശൈലി. ശബ്ദ അനുകരണം.',
+    '5-7':'ലളിത ഭാഷ. ചെറിയ ഖണ്ഡികകൾ. ആകാംക്ഷ, ഡയലോഗ്.',
+    '7-9':'സമ്പന്ന ഭാഷ. വൈകാരിക ആഴം. ദാർശനിക ചിന്ത.',
+  };
 
-━━━ കർശനമായ നിർദ്ദേശങ്ങൾ ━━━
+  const systemPrompt=`നീ ഒരു മുതിർന്ന മലയാള സാഹിത്യകാരനാണ്. ബഷീർ, തകഴി, മാധവിക്കുട്ടി ശൈലിയിൽ കുട്ടികൾക്കായി എഴുതുന്നു.
 
-ഭാഷ:
-- ശുദ്ധ മലയാളം മാത്രം ഉപയോഗിക്കുക. ഇംഗ്ലീഷ് വാക്കുകൾ ഒഴിവാക്കുക.
-- അക്ഷരത്തെറ്റുകൾ ഒരിക്കലും പാടില്ല. ഓരോ വാക്കും ശ്രദ്ധിച്ച് എഴുതുക.
-- മലയാളം ലിപി മാത്രം — transliteration പാടില്ല.
+നിന്റെ ശൈലി:
+— ഇന്ദ്രിയ അനുഭവങ്ങൾ: "കുട്ടി നടന്നു" അല്ല — "ചേറ്റിൽ കാലുകൾ ആഴ്ന്നിറങ്ങി, ചൂടുമണ്ണിന്റെ മണം മൂക്കിലേക്ക് കയറി"
+— ഡയലോഗ് ജീവനുള്ളത്: "—അമ്മേ, ഞാൻ ഇനി..." "—ഹേ, അങ്ങനെ പറഞ്ഞാൽ?"
+— കേരള പ്രകൃതി: മഴ, ചേമ്പ്, കവുങ്ങ്, ഓടവഞ്ചി, അമ്പലം, ഉൽസവം
+— കഥാപാത്രങ്ങൾക്ക് ലോപം ഉണ്ട്. അവർ ഭ്രമിക്കും, തെറ്റ് ചെയ്യും, പഠിക്കും.
+— "കഥ അവസാനിച്ചു", "സദ്ഫലം" തുടങ്ങിയ ക്ലിഷേ ഇല്ല.`;
 
-കഥാപാത്രങ്ങളുടെ പേരുകൾ:
-- കേരളീയ അല്ലെങ്കിൽ ഭാരതീയ പേരുകൾ മാത്രം ഉപയോഗിക്കുക.
-- ഉദാഹരണം: ${names}
-- "Kallan", "Hero", "King" തുടങ്ങിയ ഇംഗ്ലീഷ് അല്ലെങ്കിൽ അർത്ഥശൂന്യമായ പേരുകൾ പാടില്ല.
+  const prompt=`വിഭാഗം: ${catContext[cat]||catContext.kerala}
+പ്രായം: ${ageStyle[age]||ageStyle['5-7']}
+പേരുകൾ: ${names} (2-3 തിരഞ്ഞെടുക്കുക)
 
-കഥയുടെ ഘടന (1200-1500 വാക്കുകൾ):
-1. ആമുഖം — സ്ഥലവും കാലവും കഥാപാത്രങ്ങളെയും പരിചയപ്പെടുത്തുക (2 ഖണ്ഡികകൾ)
-2. പ്രശ്നം — ഒരു വെല്ലുവിളി അല്ലെങ്കിൽ ആഗ്രഹം (2 ഖണ്ഡികകൾ)
-3. യാത്ര — പ്രശ്നം പരിഹരിക്കാനുള്ള ശ്രമം, സഹായങ്ങൾ, തടസ്സങ്ങൾ (4 ഖണ്ഡികകൾ)
-4. പരിഹാരം — ജ്ഞാനം അല്ലെങ്കിൽ ദയ കൊണ്ട് പ്രശ്നം തീർക്കുക (2 ഖണ്ഡിക)
-5. ഉപസംഹാരം — സന്തോഷകരമായ അവസാനം, ഉറക്കത്തിലേക്ക് (1 ഖണ്ഡിക)
+ഉറക്കക്കഥ ഘടന (10 ഖണ്ഡിക, 1000-1200 വാക്ക്):
+ഖണ്ഡിക 1: കേരളത്തിലെ സ്ഥലം — ഗന്ധം, ശബ്ദം, കാഴ്ച
+ഖണ്ഡിക 2: കഥാപാത്ര പരിചയം + ഒരു ഡയലോഗ്
+ഖണ്ഡിക 3-4: പ്രശ്നം / ദ്വന്ദം (ഭയം vs ധൈര്യം, ദുരാഗ്രഹം vs ത്യാഗം)
+ഖണ്ഡിക 5-7: ശ്രമങ്ങൾ, തടസ്സങ്ങൾ, സഹായം — ജീവനുള്ള ഡയലോഗ്
+ഖണ്ഡിക 8-9: ബുദ്ധി/ദയ/പ്രകൃതി കൊണ്ട് പരിഹാരം
+ഖണ്ഡിക 10: ശാന്തമായ ഉറക്കം — ചന്ദ്രൻ, നക്ഷത്രം, നിശ്ശബ്ദത
 
-ഉള്ളടക്കം:
-- യുക്തിസഹമായ കഥ — കഥാഗതി സ്വാഭാവികമായിരിക്കണം
-- കഥാപാത്രങ്ങൾ തമ്മിലുള്ള സ്വാഭാവിക സംഭാഷണം ഉൾപ്പെടുത്തുക
-- കേരളത്തിന്റെ പ്രകൃതി, ഭക്ഷണം, ജീവിതരീതി എന്നിവ സ്വാഭാവികമായി ഉൾക്കൊള്ളിക്കുക
-- കഥ പൂർണ്ണമായി അവസാനിക്കണം — ഒരിക്കലും പകുതിയിൽ നിർത്തരുത്
+നിയമങ്ങൾ:
+✓ ശുദ്ധ മലയാളം മാത്രം — ഒരു ഇംഗ്ലീഷ് വാക്കും പാടില്ല
+✓ അക്ഷരത്തെറ്റ് ഇല്ല
+✓ ഡയലോഗ് "—" ഉപയോഗിക്കുക
+✓ കഥ പൂർണ്ണമായി അവസാനിക്കണം
 
-ഇപ്പോൾ EXACTLY ഈ format-ൽ മാത്രം മറുപടി നൽകുക, മറ്റൊന്നും വേണ്ട:
+EXACTLY ഈ format:
 
-TITLE_ML: <കഥയുടെ പേര് മലയാളത്തിൽ>
-TITLE_EN: <story title in English>
+TITLE_ML: <മലയാളത്തിൽ>
+TITLE_EN: <English title>
 EMOJI: <one emoji from: ${emojiSet}>
-MORAL: <ഒറ്റ വാക്യത്തിൽ കഥയുടെ സന്ദേശം മലയാളത്തിൽ>
+MORAL: <ഒറ്റ വാക്യം>
 STORY:
-<കഥ ഇവിടെ — ഖണ്ഡികകൾ തമ്മിൽ ഒരു ശൂന്യ വരി ഇടുക>`;
+<കഥ — ഖണ്ഡികകൾ തമ്മിൽ ശൂന്യ വരി>`;
 
   try{
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        messages:[{role:'user',content:prompt}],
-        temperature:.4, max_tokens:2600
-      })
-    });
-    if(!res.ok){
-      const err=await res.json().catch(()=>({}));
-      throw new Error(err.error?.message||'API error '+res.status);
-    }
-    const data=await res.json();
-
-    // Check if story was cut off before finishing
-    const finishReason=data.choices[0].finish_reason;
-    if(finishReason==='length'){
-      throw new Error('കഥ പൂർണ്ണമായില്ല. വീണ്ടും ശ്രമിക്കൂ.');
+    let raw='';
+    if(engine==='gemini'){
+      raw=await callGemini(key, systemPrompt, prompt);
+    } else {
+      raw=await callGroq(key, systemPrompt, prompt);
     }
 
-    const raw=data.choices[0].message.content.trim();
-
-    // Parse delimited plain text response
-    const get=(key)=>{
-      const m=raw.match(new RegExp(`^${key}:\\s*(.+)$`,'m'));
-      return m?m[1].trim():'';
-    };
+    const get=(k)=>{const m=raw.match(new RegExp(`^${k}:\\s*(.+)$`,'m'));return m?m[1].trim():'';};
     const storyMatch=raw.match(/^STORY:\s*\n([\s\S]+)$/m);
     const storyText=storyMatch?storyMatch[1].trim():'';
-
     if(!storyText) throw new Error('കഥ ലഭിച്ചില്ല. വീണ്ടും ശ്രമിക്കൂ.');
 
     const moral=get('MORAL');
     const story={
       id:'gen_'+Date.now(),
       cat, age,
-      emoji: get('EMOJI')||'✨',
-      dur: Math.max(12,Math.round(storyText.split(' ').length/80)),
-      title: get('TITLE_ML')||'കഥ',
-      titleEn: get('TITLE_EN')||'',
-      text: storyText+(moral?'\n\n🌙 '+moral:''),
+      engine,
+      emoji:get('EMOJI')||'✨',
+      dur:Math.max(12,Math.round(storyText.split(' ').length/80)),
+      title:get('TITLE_ML')||'കഥ',
+      titleEn:get('TITLE_EN')||'',
+      text:storyText+(moral?'\n\n🌙 '+moral:''),
     };
     stories.unshift(story); save();
-    toast('✨ കഥ തയ്യാർ!');
+    toast(engine==='gemini'?'🌟 Gemini കഥ തയ്യാർ!':'✨ കഥ തയ്യാർ!');
     openReader(story);
   }catch(e){
     toast('❌ '+(e.message||'Error'));
@@ -772,9 +825,15 @@ STORY:
 
 // ── API key visibility ─────────────────────────────────────────────────────
 function updateApiWrap(){
-  const hasKey=!!(getKey());
+  const engine=document.getElementById('genEngine').value;
+  const hasGroq=!!(apiKey||localStorage.getItem('nk_key'));
+  const hasGemini=!!(geminiKey||localStorage.getItem('nk_gemini_key'));
+  const hasKey = engine==='gemini' ? hasGemini : hasGroq;
   document.getElementById('apiWrap').style.display=hasKey?'none':'block';
+  document.getElementById('groqKeyWrap').style.display=engine==='groq'?'block':'none';
+  document.getElementById('geminiKeyWrap').style.display=engine==='gemini'?'block':'none';
 }
+document.getElementById('genEngine').addEventListener('change', updateApiWrap);
 
 // ── Tabs ───────────────────────────────────────────────────────────────────
 document.querySelectorAll('.nav-item').forEach(item=>{
@@ -811,6 +870,7 @@ applyTheme();
 document.getElementById('adminBtn').addEventListener('click',()=>{
   document.getElementById('adminOverlay').classList.add('open');
   document.getElementById('admKey').value=localStorage.getItem('nk_key')||'';
+  document.getElementById('admGeminiKey').value=localStorage.getItem('nk_gemini_key')||'';
   document.getElementById('admSarvamKey').value=localStorage.getItem('nk_sarvam_key')||'';
 });
 document.getElementById('admCancel').addEventListener('click',()=>{
@@ -820,6 +880,9 @@ document.getElementById('admSave').addEventListener('click',()=>{
   const key=document.getElementById('admKey').value.trim();
   if(key){localStorage.setItem('nk_key',key); apiKey=key;}
   else{localStorage.removeItem('nk_key'); apiKey='';}
+  const gk=document.getElementById('admGeminiKey').value.trim();
+  if(gk){localStorage.setItem('nk_gemini_key',gk); geminiKey=gk;}
+  else{localStorage.removeItem('nk_gemini_key'); geminiKey='';}
   const sk=document.getElementById('admSarvamKey').value.trim();
   if(sk){localStorage.setItem('nk_sarvam_key',sk); sarvamKey=sk;}
   else{localStorage.removeItem('nk_sarvam_key'); sarvamKey='';}
