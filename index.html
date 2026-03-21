@@ -680,7 +680,7 @@ async function callGemini(key, systemPrompt, prompt){
       contents:[{role:'user',parts:[{text:prompt}]}],
       generationConfig:{
         temperature:0.7,
-        maxOutputTokens:4000,
+        maxOutputTokens:2000,
         responseMimeType:'text/plain',
         thinkingConfig:{thinkingBudget:2048}
       },
@@ -758,13 +758,12 @@ document.getElementById('genBtn').addEventListener('click', async()=>{
 പ്രായം: ${ageStyle[age]||ageStyle['5-7']}
 പേരുകൾ: ${names} (2-3 തിരഞ്ഞെടുക്കുക)
 
-ഉറക്കക്കഥ ഘടന (10 ഖണ്ഡിക, 1000-1200 വാക്ക്):
+ഉറക്കക്കഥ ഘടന (7 ഖണ്ഡിക, 500-700 വാക്ക്):
 ഖണ്ഡിക 1: കേരളത്തിലെ സ്ഥലം — ഗന്ധം, ശബ്ദം, കാഴ്ച
 ഖണ്ഡിക 2: കഥാപാത്ര പരിചയം + ഒരു ഡയലോഗ്
 ഖണ്ഡിക 3-4: പ്രശ്നം / ദ്വന്ദം (ഭയം vs ധൈര്യം, ദുരാഗ്രഹം vs ത്യാഗം)
-ഖണ്ഡിക 5-7: ശ്രമങ്ങൾ, തടസ്സങ്ങൾ, സഹായം — ജീവനുള്ള ഡയലോഗ്
-ഖണ്ഡിക 8-9: ബുദ്ധി/ദയ/പ്രകൃതി കൊണ്ട് പരിഹാരം
-ഖണ്ഡിക 10: ശാന്തമായ ഉറക്കം — ചന്ദ്രൻ, നക്ഷത്രം, നിശ്ശബ്ദത
+ഖണ്ഡിക 5-6: ശ്രമങ്ങൾ, സഹായം, പരിഹാരം — ജീവനുള്ള ഡയലോഗ്
+ഖണ്ഡിക 7: ശാന്തമായ ഉറക്കം — ചന്ദ്രൻ, നക്ഷത്രം, നിശ്ശബ്ദത
 
 നിയമങ്ങൾ:
 ✓ ശുദ്ധ മലയാളം മാത്രം — ഒരു ഇംഗ്ലീഷ് വാക്കും പാടില്ല
@@ -800,7 +799,7 @@ STORY:
       cat, age,
       engine,
       emoji:get('EMOJI')||'✨',
-      dur:Math.max(12,Math.round(storyText.split(' ').length/80)),
+      dur:Math.max(5,Math.round(storyText.split(' ').length/80)),
       title:get('TITLE_ML')||'കഥ',
       titleEn:get('TITLE_EN')||'',
       text:storyText+(moral?'\n\n🌙 '+moral:''),
