@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>കഥപ്പെട്ടി</title>
 <link rel="manifest" href="manifest.json"/>
+<script src="builtin-stories.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
 <meta name="theme-color" content="#0d0a18" media="(prefers-color-scheme: dark)"/>
 <meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)"/>
@@ -115,6 +116,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .empty{text-align:center;padding:40px 20px;color:var(--text2);font-family:'Noto Serif Malayalam',serif;line-height:2}
 .loader{display:inline-block;width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:20px auto;display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
+.mode-tabs{display:flex;gap:8px;margin:10px 0 0}
+.mode-tab{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-family:'Noto Serif Malayalam',serif;font-size:.85rem;cursor:pointer;transition:all .2s;text-align:center}
+.mode-tab.active{background:var(--gold);border-color:var(--gold);color:#0a0a1a;font-weight:700}
+.mode-panel{display:none}.mode-panel.active{display:block}
+.attr-box{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:10px;padding:10px 14px;margin:10px 0 14px;font-size:.75rem;color:var(--text2);line-height:1.7}
+.attr-box a{color:var(--gold);text-decoration:none}
+.attr-box strong{color:var(--text);display:block;margin-bottom:2px}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:10px 20px;font-size:.88rem;z-index:999;animation:fadeup .3s ease;pointer-events:none;font-family:'Noto Serif Malayalam',serif;white-space:nowrap}
 @keyframes fadeup{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 
@@ -189,29 +197,47 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
 
     <div class="cats" id="catBar"></div>
 
-    <div class="gen-card">
-      <h3>✨ പുതിയ കഥ ഉണ്ടാക്കൂ</h3>
-      <div class="gen-row">
-        <select id="genCat"></select>
-        <select id="genAge">
-          <option value="3-5">3–5 വയസ്സ്</option>
-          <option value="5-7" selected>5–7 വയസ്സ്</option>
-          <option value="7-9">7–9 വയസ്സ്</option>
-        </select>
-      </div>
-      <div class="gen-row" style="margin-bottom:4px">
-        <select id="genEngine" style="flex:1">
-          <option value="groq">⚡ Groq — Llama 3.3 (സൗജന്യം, വേഗം)</option>
-          <option value="gemini">🌟 Gemini 2.5 Flash (മികച്ച നിലവാരം)</option>
-        </select>
-      </div>
-      <button class="btn-gen" id="genBtn">🌟 കഥ ഉണ്ടാക്കൂ</button>
-      <div class="api-wrap" id="apiWrap">
-        <p style="font-size:.82rem;color:var(--text2);margin:0">⚙️ API key കോൺഫിഗർ ചെയ്യുക — മുകളിൽ <strong style="color:var(--gold)">⚙️</strong> ബട്ടൺ ടാപ്പ് ചെയ്യൂ.</p>
-      </div>
+    <!-- Mode switcher -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="library">📚 കഥാശേഖരം</button>
+      <button class="mode-tab" data-mode="ai">✨ AI കഥ</button>
     </div>
 
-    <div id="homeStories"></div>
+    <!-- Library panel -->
+    <div class="mode-panel active" id="panel-library">
+      <div class="attr-box">
+        <strong>📖 StoryWeaver — Pratham Books</strong>
+        ഈ കഥകൾ <a href="https://storyweaver.org.in" target="_blank">StoryWeaver</a> (Pratham Books) ൽ നിന്ന് ശേഖരിച്ചതാണ്.
+        License: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>
+      </div>
+      <div id="libraryStories"></div>
+    </div>
+
+    <!-- AI generate panel -->
+    <div class="mode-panel" id="panel-ai">
+      <div class="gen-card">
+        <h3>✨ പുതിയ കഥ ഉണ്ടാക്കൂ</h3>
+        <div class="gen-row">
+          <select id="genCat"></select>
+          <select id="genAge">
+            <option value="3-5">3–5 വയസ്സ്</option>
+            <option value="5-7" selected>5–7 വയസ്സ്</option>
+            <option value="7-9">7–9 വയസ്സ്</option>
+          </select>
+        </div>
+        <div class="gen-row" style="margin-bottom:4px">
+          <select id="genEngine" style="flex:1">
+            <option value="groq">⚡ Groq — Llama 3.3 (സൗജന്യം, വേഗം)</option>
+            <option value="gemini">🌟 Gemini 2.5 Flash (മികച്ച നിലവാരം)</option>
+          </select>
+        </div>
+        <button class="btn-gen" id="genBtn">🌟 കഥ ഉണ്ടാക്കൂ</button>
+        <div class="api-wrap" id="apiWrap">
+          <p style="font-size:.82rem;color:var(--text2);margin:0">⚙️ API key കോൺഫിഗർ ചെയ്യുക — മുകളിൽ <strong style="color:var(--gold)">⚙️</strong> ബട്ടൺ ടാപ്പ് ചെയ്യൂ.</p>
+        </div>
+      </div>
+      <div id="aiStories"></div>
+    </div>
   </div>
 
   <!-- FAVORITES TAB -->
@@ -345,7 +371,7 @@ function renderCatBar(){
       ${c.emoji} ${c.label}
     </button>`).join('');
   bar.querySelectorAll('.cat').forEach(b=>b.addEventListener('click',()=>{
-    activeCat=b.dataset.id; renderCatBar(); renderHomeStories();
+  activeCat=b.dataset.id; renderCatBar(); renderLibraryStories(); renderAiStories();
   }));
 }
 
@@ -383,7 +409,10 @@ function attachCardEvents(container){
   container.querySelectorAll('.story-card').forEach(card=>{
     card.addEventListener('click',e=>{
       if(e.target.closest('.sc-fav'))return;
-      openReader(stories.find(s=>s.id===card.dataset.id));
+      const id=card.dataset.id;
+      // Look in AI stories first, then builtin
+      const s=stories.find(s=>s.id===id) || BUILTIN_STORIES.find(s=>s.id===id);
+      if(s) openReader(s);
     });
   });
   container.querySelectorAll('.sc-fav').forEach(btn=>{
@@ -398,13 +427,30 @@ function attachCardEvents(container){
 }
 
 // ── Render tabs ────────────────────────────────────────────────────────────
-function renderHomeStories(){
-  const el = document.getElementById('homeStories');
+let activeMode = 'library';
+
+function renderLibraryStories(){
+  const el = document.getElementById('libraryStories');
+  let list = (BUILTIN_STORIES || []).filter(s =>
+    (activeCat === 'all' || s.cat === activeCat)
+  );
+  if(!list.length){
+    el.innerHTML=`<div class="empty"><p style="font-size:2rem">📚</p><p>ഈ വിഭാഗത്തിൽ കഥകൾ ഇല്ല.</p></div>`;
+    return;
+  }
+  const div=document.createElement('div'); div.className='story-grid';
+  div.innerHTML=list.map(cardHTML).join('');
+  el.innerHTML=''; el.appendChild(div);
+  attachCardEvents(el);
+}
+
+function renderAiStories(){
+  const el = document.getElementById('aiStories');
   let list = activeCat==='all' ? stories : stories.filter(s=>s.cat===activeCat);
   if(!list.length){
     el.innerHTML=`<div class="empty">
       <p style="font-size:2rem">🌙</p>
-      <p>ഇവിടെ ഇനിയും കഥകൾ ഇല്ല.</p>
+      <p>ഇനിയും AI കഥകൾ ഇല്ല.</p>
       <p>മുകളിൽ നിന്ന് ഒരു കഥ ഉണ്ടാക്കൂ!</p>
     </div>`;
     return;
@@ -415,9 +461,15 @@ function renderHomeStories(){
   attachCardEvents(el);
 }
 
+function renderHomeStories(){
+  renderLibraryStories();
+  renderAiStories();
+}
+
 function renderFavStories(){
   const el=document.getElementById('favStories');
-  const list=stories.filter(s=>favs.includes(s.id));
+  const allStories=[...(BUILTIN_STORIES||[]),...stories];
+  const list=allStories.filter(s=>favs.includes(s.id));
   if(!list.length){el.innerHTML=`<div class="empty">❤️<br>ഒരു കഥ ഹൃദയത്തോട് ചേർക്കൂ!</div>`;return;}
   const div=document.createElement('div'); div.className='story-grid';
   div.innerHTML=list.map(cardHTML).join('');
@@ -426,7 +478,8 @@ function renderFavStories(){
 
 function renderHistStories(){
   const el=document.getElementById('histStories');
-  const list=stories.filter(s=>hist.includes(s.id));
+  const allStories=[...(BUILTIN_STORIES||[]),...stories];
+  const list=allStories.filter(s=>hist.includes(s.id));
   if(!list.length){el.innerHTML=`<div class="empty">📖<br>ഇനിയും ഒരു കഥ വായിക്കൂ!</div>`;return;}
   const div=document.createElement('div'); div.className='story-grid';
   div.innerHTML=[...list].reverse().map(cardHTML).join('');
@@ -438,7 +491,18 @@ function openReader(s){
   currentStory=s;
   if(!hist.includes(s.id)){hist.push(s.id); save();}
   document.getElementById('readerTitle').textContent=s.title;
-  document.getElementById('readerBody').innerHTML=s.text.split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+
+  // Build body with optional attribution footer
+  let bodyHtml = s.text.split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+  if(s.source==='storyweaver'){
+    bodyHtml += `<div style="margin-top:24px;padding:12px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--gold);font-size:.78rem;color:var(--text2);line-height:1.8">
+      ✍️ <strong style="color:var(--text)">ലേഖകൻ:</strong> ${s.author}<br>
+      📖 <strong style="color:var(--text)">ഉറവിടം:</strong> <a href="${s.swUrl}" target="_blank" style="color:var(--gold)">StoryWeaver — Pratham Books</a><br>
+      ⚖️ <strong style="color:var(--text)">License:</strong> <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:var(--gold)">CC BY 4.0</a>
+    </div>`;
+  }
+  document.getElementById('readerBody').innerHTML=bodyHtml;
+
   const isFav=favs.includes(s.id);
   document.getElementById('readerFav').textContent=isFav?'❤️':'🤍';
   document.getElementById('readerFavBtn').innerHTML=isFav?'❤️ Saved':'🤍 Save';
@@ -715,7 +779,7 @@ document.getElementById('genBtn').addEventListener('click', async()=>{
   const btn=document.getElementById('genBtn');
   btn.disabled=true;
   btn.textContent=engine==='gemini'?'🌟 Gemini ചിന്തിക്കുന്നു...':'🌙 ഉണ്ടാക്കുന്നു...';
-  document.getElementById('homeStories').innerHTML='<div class="loader"></div>';
+  document.getElementById('aiStories').innerHTML='<div class="loader"></div>';
 
   const emojis={panchatantra:'🦁🐘🦊🐢🐍',jataka:'🐘🦌🦢🐒🐠',folk:'🏡🌺🌾🪔✨',animal:'🦋🦚🐿️🦜🦝',wisdom:'🪔💫🌟🎋🏺',kerala:'🌴🌺🌊🥥🎭'};
   const emojiSet=emojis[cat]||'✨🌟💫';
@@ -809,7 +873,7 @@ STORY:
     openReader(story);
   }catch(e){
     toast('❌ '+(e.message||'Error'));
-    document.getElementById('homeStories').innerHTML='';
+    document.getElementById('aiStories').innerHTML='';
   }finally{
     btn.disabled=false; btn.textContent='🌟 കഥ ഉണ്ടാക്കൂ';
     renderHomeStories();
@@ -908,10 +972,22 @@ if('serviceWorker' in navigator){
   });
 }
 
+// ── Mode tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.mode-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    activeMode=tab.dataset.mode;
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.mode-panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+activeMode).classList.add('active');
+  });
+});
+
 // ── Init ───────────────────────────────────────────────────────────────────
 renderCatBar();
 initGenCat();
-renderHomeStories();
+renderLibraryStories();
+renderAiStories();
 updateApiWrap();
 </script>
 </body>
