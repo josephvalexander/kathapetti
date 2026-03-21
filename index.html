@@ -207,14 +207,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
       </div>
       <button class="btn-gen" id="genBtn">🌟 കഥ ഉണ്ടാക്കൂ</button>
       <div class="api-wrap" id="apiWrap">
-        <div id="groqKeyWrap">
-          <label>Groq API Key — <a href="https://console.groq.com" target="_blank" style="color:var(--gold)">console.groq.com</a> (free)</label>
-          <input type="password" id="apiKeyInput" placeholder="gsk_..."/>
-        </div>
-        <div id="geminiKeyWrap" style="display:none;margin-top:8px">
-          <label>Gemini API Key — <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold)">aistudio.google.com</a> (free)</label>
-          <input type="password" id="geminiKeyInput" placeholder="AIza..."/>
-        </div>
+        <p style="font-size:.82rem;color:var(--text2);margin:0">⚙️ API key കോൺഫിഗർ ചെയ്യുക — മുകളിൽ <strong style="color:var(--gold)">⚙️</strong> ബട്ടൺ ടാപ്പ് ചെയ്യൂ.</p>
       </div>
     </div>
 
@@ -689,9 +682,8 @@ async function callGemini(key, systemPrompt, prompt){
         temperature:0.7,
         maxOutputTokens:3000,
         responseMimeType:'text/plain',
+        thinkingConfig:{thinkingBudget:8000}
       },
-      // Enable thinking for deeper, more coherent Malayalam output
-      thinkingConfig:{thinkingBudget:8000}
     })
   });
   if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||'Gemini error '+res.status);}
@@ -706,13 +698,11 @@ document.getElementById('genBtn').addEventListener('click', async()=>{
   const engine=document.getElementById('genEngine').value;
   let key='';
   if(engine==='gemini'){
-    key=document.getElementById('geminiKeyInput').value.trim()||geminiKey||localStorage.getItem('nk_gemini_key')||'';
-    if(!key){toast('⚠️ Gemini API key ആവശ്യമാണ്');document.getElementById('geminiKeyInput').focus();return;}
-    geminiKey=key; localStorage.setItem('nk_gemini_key',key);
+    key=geminiKey||localStorage.getItem('nk_gemini_key')||'';
+    if(!key){toast('⚠️ ⚙️ Settings-ൽ Gemini API key ചേർക്കൂ');return;}
   } else {
-    key=document.getElementById('apiKeyInput').value.trim()||apiKey||localStorage.getItem('nk_key')||'';
-    if(!key){toast('⚠️ Groq API key ആവശ്യമാണ്');document.getElementById('apiKeyInput').focus();return;}
-    apiKey=key; localStorage.setItem('nk_key',key);
+    key=apiKey||localStorage.getItem('nk_key')||'';
+    if(!key){toast('⚠️ ⚙️ Settings-ൽ Groq API key ചേർക്കൂ');return;}
   }
 
   const cat=document.getElementById('genCat').value;
@@ -828,10 +818,8 @@ function updateApiWrap(){
   const engine=document.getElementById('genEngine').value;
   const hasGroq=!!(apiKey||localStorage.getItem('nk_key'));
   const hasGemini=!!(geminiKey||localStorage.getItem('nk_gemini_key'));
-  const hasKey = engine==='gemini' ? hasGemini : hasGroq;
+  const hasKey=engine==='gemini'?hasGemini:hasGroq;
   document.getElementById('apiWrap').style.display=hasKey?'none':'block';
-  document.getElementById('groqKeyWrap').style.display=engine==='groq'?'block':'none';
-  document.getElementById('geminiKeyWrap').style.display=engine==='gemini'?'block':'none';
 }
 document.getElementById('genEngine').addEventListener('change', updateApiWrap);
 
