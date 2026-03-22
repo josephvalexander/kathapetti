@@ -1,6 +1,16 @@
 // APP_VERSION: __VERSION__
 const CACHE = 'kathapetti-__VERSION__';
-const ASSETS = ['./','./index.html','./builtin-stories.js','./icon-192.svg','./icon-512.svg','./icon-maskable.svg','./manifest.json'];
+const ASSETS = [
+  './', './index.html',
+  './builtin-stories.js',
+  './stories-batch-1.js',
+  './stories-batch-2.js',
+  './stories-batch-3.js',
+  './stories-batch-4.js',
+  './stories-batch-5.js',
+  './stories-batch-6.js',
+  './icon-192.svg', './icon-512.svg', './icon-maskable.svg', './manifest.json'
+];
 
 self.addEventListener('install', e => {
   self.skipWaiting();

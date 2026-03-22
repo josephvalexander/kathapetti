@@ -6,6 +6,12 @@
 <title>കഥപ്പെട്ടി</title>
 <link rel="manifest" href="manifest.json"/>
 <script src="builtin-stories.js"></script>
+<script src="stories-batch-1.js"></script>
+<script src="stories-batch-2.js"></script>
+<script src="stories-batch-3.js"></script>
+<script src="stories-batch-4.js"></script>
+<script src="stories-batch-5.js"></script>
+<script src="stories-batch-6.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Malayalam:wght@400;600&display=swap" rel="stylesheet"/>
 <meta name="theme-color" content="#0d0a18" media="(prefers-color-scheme: dark)"/>
 <meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)"/>
@@ -206,9 +212,9 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px 
     <!-- Library panel -->
     <div class="mode-panel active" id="panel-library">
       <div class="attr-box">
-        <strong>📖 മലയാളം വിക്കിഗ്രന്ഥശാല</strong>
-        ഈ കഥകൾ <a href="https://ml.wikisource.org" target="_blank">മലയാളം വിക്കിഗ്രന്ഥശാല</a> (Wikimedia Foundation) ൽ നിന്ന് ശേഖരിച്ചതാണ്.
-        ഉള്ളടക്കം Public Domain / <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
+        <strong>📚 കഥാ ശേഖരം</strong>
+        60 കഥകൾ — പഞ്ചതന്ത്രം, ഈസോപ്പ്, ജാതക കഥകൾ, കേരള നാടോടി കഥകൾ, ജ്ഞാന കഥകൾ — Public Domain.
+        ഓൺലൈൻ ആകുമ്പോൾ <a href="https://ml.wikisource.org" target="_blank">വിക്കിഗ്രന്ഥശാല</a> (CC BY-SA 4.0) കഥകളും ലോഡ് ആകും.
       </div>
       <div id="libraryStories"></div>
     </div>
@@ -411,7 +417,7 @@ function attachCardEvents(container){
       if(e.target.closest('.sc-fav'))return;
       const id=card.dataset.id;
       // Look in AI stories first, then builtin
-      const s=stories.find(s=>s.id===id) || BUILTIN_STORIES.find(s=>s.id===id) || wikisourceStories.find(s=>s.id===id);
+      const s=stories.find(s=>s.id===id) || allLibraryStories().find(s=>s.id===id);
       if(s) openReader(s);
     });
   });
@@ -431,7 +437,16 @@ let activeMode = 'library';
 let wikisourceStories = []; // populated async on init
 
 function allLibraryStories() {
-  return [...(BUILTIN_STORIES || []), ...wikisourceStories];
+  return [
+    ...(BUILTIN_STORIES      || []),
+    ...(STORIES_BATCH_1      || []),
+    ...(STORIES_BATCH_2      || []),
+    ...(STORIES_BATCH_3      || []),
+    ...(STORIES_BATCH_4      || []),
+    ...(STORIES_BATCH_5      || []),
+    ...(STORIES_BATCH_6      || []),
+    ...wikisourceStories,
+  ];
 }
 
 function renderLibraryStories(){
@@ -473,7 +488,7 @@ function renderHomeStories(){
 
 function renderFavStories(){
   const el=document.getElementById('favStories');
-  const allStories=[...(BUILTIN_STORIES||[]),...wikisourceStories,...stories];
+  const allStories=[...allLibraryStories(),...stories];
   const list=allStories.filter(s=>favs.includes(s.id));
   if(!list.length){el.innerHTML=`<div class="empty">❤️<br>ഒരു കഥ ഹൃദയത്തോട് ചേർക്കൂ!</div>`;return;}
   const div=document.createElement('div'); div.className='story-grid';
@@ -483,7 +498,7 @@ function renderFavStories(){
 
 function renderHistStories(){
   const el=document.getElementById('histStories');
-  const allStories=[...(BUILTIN_STORIES||[]),...wikisourceStories,...stories];
+  const allStories=[...allLibraryStories(),...stories];
   const list=allStories.filter(s=>hist.includes(s.id));
   if(!list.length){el.innerHTML=`<div class="empty">📖<br>ഇനിയും ഒരു കഥ വായിക്കൂ!</div>`;return;}
   const div=document.createElement('div'); div.className='story-grid';
